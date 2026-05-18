@@ -59,14 +59,18 @@ Workout
 
 A sticky title bar sits at the top, the **START** button + total duration sit pinned at the bottom, and the loops scroll between them. Inside a loop you can add / remove / reorder interval blocks (↑ ↓ ×), edit work/rest seconds, and set a per-loop round count and transition rest. Loops themselves can be reordered, duplicated, or deleted.
 
-### Templates
+### Templates (web — Complex only)
 
-Save the current workout to `localStorage` under a name; reload it later. All persisted in key `complex-templates-v1` as JSON. UI:
+On the web, the **only** mode with template save/load is Complex — Tabata / EMOM / AMRAP / For Time configure in seconds, so a templates layer isn't worth the screen real estate. Complex workouts on the other hand can take minutes to build, so they're saveable.
+
+Persisted to `localStorage['complex-templates-v1']` as JSON. UI:
 
 - Select a template from the dropdown — selection alone doesn't load anything.
 - Hit **LOAD** to populate the builder with that template.
 - Hit **SAVE** to capture the current workout as a new template (or overwrite an existing one — confirmed in a modal).
 - Hit **DELETE** to remove the selected template (also modal-confirmed).
+
+> **Native iOS / Android (Phase 2)** will add a dedicated **Saved Timers** screen that holds saved configs for *every* mode in one place — see [DESIGN.md § Phase 2](DESIGN.md#14-phase-2--react-native--expo-rebuild-planned). That UI is a mobile-only addition; the web stays Complex-only by design.
 
 ---
 
@@ -162,6 +166,7 @@ src/
     RotateHint.tsx                  # portrait phone hint
     SetupShell.tsx                  # title + centered form layout
     SideDrawer.tsx                  # cog settings drawer
+    TemplatesPanel.tsx              # generic save/load/delete + modals for any mode
     TimerDisplay.tsx                # scoreboard digits + label/round/phase
     TimerScreen.tsx                 # progress rail + paused overlay + heat grid
     Toggle.tsx                      # binary toggle with reserved-width label

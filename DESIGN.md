@@ -193,15 +193,21 @@ Inside a loop card: a header (`LOOP 01` + ↑ ↓ ⎘ × controls), a centered `
 
 Each interval row is a 4-column grid (`[index] [Work·sec] [Rest·sec] [↑ ↓ ×]`) on desktop. On phone the controls drop to a second sub-row below the inputs to keep tap targets generous.
 
-### Templates
+### Templates (web — Complex only)
 
+Only the Complex builder gets template save/load on the web. The simpler modes (Tabata / EMOM / AMRAP / For Time) configure in seconds — a per-mode templates layer would be more UI than it's worth. Native iOS / Android consolidate cross-mode saving into a dedicated Saved Timers screen instead (see § 14).
+
+The Save / Load / Delete UI is factored into a single generic component so the Phase 2 native screen can reuse the same shape:
+
+```tsx
+function TemplatesPanel<T>({ storageKey, currentValue, onLoad, noun }): JSX.Element
 ```
-localStorage['complex-templates-v1'] = JSON.stringify({ [name]: Workout })
-```
 
-Selection alone is inert — the user has to hit **LOAD** to populate the builder. **SAVE** opens a styled modal that captures a name; if the name collides with an existing template, a second modal asks `Replace template?`. **DELETE** opens a third modal asking `Delete template?`. All three modals share `.modal-backdrop` + `.modal` + `.modal__*` styles.
+It owns its own state for the templates map, the dropdown selection, and the three modal toggles. Complex passes `Loop[]` as `T` and re-IDs every loop / interval inside `onLoad` so React keys never collide after a template swap.
 
-Escape closes the top-most modal; clicking the backdrop closes; clicking inside the card stops propagation.
+Selection alone is inert — the user must hit **LOAD** to apply a template. **SAVE** opens a styled modal that captures a name; if the name collides with an existing template, a second modal asks `Replace template?`. **DELETE** opens a third modal asking `Delete template?`. All three modals share `.modal-backdrop` + `.modal` + `.modal__*` styles. Escape closes the top-most modal; clicking the backdrop closes; clicking inside the card stops propagation.
+
+Persisted as `localStorage['complex-templates-v1']`.
 
 ---
 
@@ -292,7 +298,7 @@ Both actions also fire GA events (`install_prompt_click` / `install_prompt_dismi
 | Key                              | Storage         | What                                              |
 | -------------------------------- | --------------- | ------------------------------------------------- |
 | `app-settings`                   | localStorage    | Theme, heats config, overtime, beep pack id       |
-| `complex-templates-v1`           | localStorage    | Named Complex workout templates                   |
+| `complex-templates-v1`           | localStorage    | Named Complex workout templates (web — Complex only) |
 | `install-prompt-dismissed-v1`    | localStorage    | One-shot mobile install modal dismissal           |
 | `rotate-hint-dismissed`          | sessionStorage  | Portrait phone hint                               |
 | `updatePopupExited_v1`           | localStorage    | One-shot "starter build" banner on Home          |
@@ -310,8 +316,192 @@ External services / accounts are isolated to four locations so a fork / rebrand 
 
 ---
 
-## 14. Out of scope (current site)
+---
 
-The original rebuild plan in `TimeYourWOD-Design-Doc.docx` proposed React Native + Expo for a unified web/iOS/Android codebase. That plan was not taken — the web stays Vite/React, and the iOS app is a separate native build distributed through the App Store. The two products share branding, beep audio, and the workout philosophy, but not the code.
+## 14. Phase 2 — React Native + Expo rebuild (planned)
 
-If/when Android joins the lineup, the `InstallPrompt` modal would gain a Play Store branch and the conditional render would split on `navigator.userAgent`.
+The current iOS app at `id6698851328` is a separate native build. To bring **Android** to the Play Store **and** unify the codebase with iOS going forward, the next phase is a React Native + Expo rebuild. The Vite web stays as the canonical web experience (or migrates to React Native Web later); this plan is just for the native side.
+
+### Goals
+
+- **One codebase ships iOS + Android.** Submitted to App Store and Google Play.
+- **Reuse the runtime engine.** The timer math (`buildTimeline`, `computeHeat`, beep cadence, beep deduplication, heat 2 long countdown) is platform-agnostic TS and ports as-is.
+- **Reuse the data model.** `Workout = Loop[]`, `Interval`, settings, beep packs — all unchanged.
+- **Reach feature parity** with the web on day 1: six modes, heats, templates for every mode, dark/light, beep preview, wake-lock-equivalent (keep-awake).
+
+### Stack
+
+| Concern             | Choice                                                                    |
+| ------------------- | ------------------------------------------------------------------------- |
+| Framework           | React Native via **Expo SDK 51+** (managed workflow)                      |
+| Language            | TypeScript                                                                |
+| Routing             | `expo-router` (file-based, mirrors the web's `/`, `/tabata`, `/complex`)  |
+| Audio               | `expo-av` `Audio.Sound` — pre-load each beep, replay by `replayAsync()`   |
+| Storage             | `expo-secure-store` or `@react-native-async-storage/async-storage`        |
+| Wake lock           | `expo-keep-awake`                                                         |
+| Haptics             | `expo-haptics` — light tap on 3-2-1, heavier hit on GO and end-of-workout |
+| Background audio    | `expo-av` configured with `staysActiveInBackground: true`                 |
+| Analytics           | `expo-firebase-analytics` or a thin gtag bridge via `react-native-fbsdk`/custom |
+| Build / submit      | EAS Build + EAS Submit                                                    |
+
+### Project layout (proposed sibling repo `timeyourwod-native/`)
+
+```
+timeyourwod-native/
+  app/                       # expo-router screens
+    _layout.tsx              # global header + Stack
+    index.tsx                # Home (six mode buttons)
+    clock.tsx
+    tabata.tsx
+    for-time.tsx
+    emom.tsx
+    amrap.tsx
+    complex/index.tsx        # builder
+    complex/run.tsx          # running view (separate route to clear params)
+    about.tsx
+    privacy.tsx
+  components/
+    FieldRow.native.tsx      # ports of web equivalents using <View> / <TextInput>
+    TimerDisplay.native.tsx
+    TimerScreen.native.tsx
+    TemplatesPanel.native.tsx
+    InstallPrompt.native.tsx ← removed (you're already in the app)
+  shared/                    # PORTED FROM WEB (verbatim)
+    timer-utils.ts           # COUNTDOWN_TIME, formatMMSS, etc.
+    complex-timeline.ts      # buildTimeline + computeHeat
+    settings-types.ts
+  contexts/
+    SettingsContext.tsx      # AsyncStorage-backed instead of localStorage
+  assets/
+    audio/{default,second}/*.mp3
+    icon.png, splash.png
+  app.json                   # name, slug, bundle id, icon, splash, plugins
+  eas.json                   # build profiles (development / preview / production)
+  package.json
+```
+
+### Phasing
+
+1. **Skeleton.** `npx create-expo-app`, expo-router boot, theme tokens ported from `index.css` into a `theme.ts` (TS object), basic `<Text>`/`<View>`/`<Pressable>` versions of `Button`, `ButtonCMD`, `FieldRow`.
+2. **Runtime port.** Lift `timer-utils.ts` and the inline `buildTimeline` / `computeHeat` from the web's `Complex.tsx` into `shared/`. Wire `expo-av` for beeps. Verify a Tabata runs identically to the web.
+3. **Mode screens.** Port Clock, Tabata, For Time, AMRAP, EMOM. Each reuses the same `TimerScreen.native` and `TimerDisplay.native`.
+4. **Complex builder.** Port LoopCard, IntervalRow, the sticky three-zone shell (use `KeyboardAvoidingView` + `ScrollView` with `flex: 1`).
+5. **Saved Timers screen (mobile-only).** A dedicated `app/saved.tsx` route — see the spec below. This replaces per-mode template panels: the simpler modes don't get one, Complex keeps its in-builder Save / Load / Delete *and* shows up alongside the other modes in the unified list.
+6. **Settings drawer.** React Navigation drawer or a bottom sheet (`@gorhom/bottom-sheet`); ports the cog → theme / heats / overtime / beep pack screen.
+7. **PWA-equivalents.** `expo-keep-awake` for wake lock; `Audio.setAudioModeAsync({ staysActiveInBackground: true, playsInSilentModeIOS: true })` for the beeps to fire on a locked phone.
+8. **Polish.** Splash screen, app icon (reuse `public/android-chrome-512x512.png` + the iOS variant), haptics on beep cadence, status bar tinting per theme.
+9. **EAS Build + Submit.** Configure `app.json` bundle identifiers (`app.code4u.timeyourwod` or similar), iOS provisioning, Android keystore. `eas submit -p ios` and `eas submit -p android` for store delivery.
+
+### Saved Timers screen (native — replaces per-mode templates)
+
+**Why a dedicated screen instead of per-mode panels.** On mobile the user is one-handed, navigates with a tab bar, and benefits from seeing every workout they've saved (regardless of mode) in one place. A unified list also makes search, sort, recent-first ordering, and eventual sync straightforward.
+
+#### Data model
+
+One unified collection — not per-mode key namespaces.
+
+```ts
+type Mode = 'tabata' | 'emom' | 'amrap' | 'fortime' | 'complex';
+
+interface SavedTimer<C = unknown> {
+  id: string;             // uuid
+  name: string;           // user-supplied
+  mode: Mode;
+  config: C;              // mode-specific shape (discriminated by `mode`)
+  createdAt: number;      // ms epoch
+  updatedAt: number;
+  lastRunAt?: number;     // for recent-first ordering
+}
+```
+
+Per-mode `config` shapes (verbatim from the web's runtime):
+
+```ts
+type TabataConfig  = { rounds: number; work: number; rest: number };
+type EmomConfig    = { rounds: number; workTotal: number; rest: number };
+type AmrapConfig   = { duration: number };
+type ForTimeConfig = { duration: number };
+type ComplexConfig = Loop[];                       // existing Workout model
+```
+
+Storage: `AsyncStorage['saved-timers-v1']` = `SavedTimer[]` as JSON. Single read on app launch, single write on any mutation.
+
+#### Navigation
+
+A bottom tab bar (`expo-router` tabs layout) with three tabs:
+
+```
+[ TIMERS ]   ← /(tabs)/index — the six-mode home grid (current Home screen)
+[ SAVED  ]   ← /(tabs)/saved — the Saved Timers screen described here
+[ ABOUT  ]   ← /(tabs)/about — About + Privacy stacked
+```
+
+Settings (cog) lives in the top header on every tab, same as the web.
+
+#### Screen layout
+
+```
+┌──────────────────────────────────┐
+│ SAVED                       + new │  header — title + add button
+├──────────────────────────────────┤
+│  Search saved timers…             │  search bar (filters by name)
+├──────────────────────────────────┤
+│  TABATA · 8 rounds · 30/10        │  card 1
+│  Wednesday strength               │
+│  Last run · 2 days ago         …  │  long-press / swipe → actions
+├──────────────────────────────────┤
+│  COMPLEX · 2 loops · 12:00 total  │  card 2
+│  Hero WOD — Murph                 │
+│  …                              … │
+├──────────────────────────────────┤
+│  EMOM · 10 rounds · every 60s     │  …
+│  Burpees + push-ups               │
+└──────────────────────────────────┘
+```
+
+Each card shows: the mode label, a one-line config summary (formatted per mode), the user name, and a relative-time "last run" line. Tap the card → opens the matching mode screen pre-filled with the saved config. Long-press (or trailing `…` menu) → `Rename` / `Duplicate` / `Delete`. Top-right `+ new` opens a mode picker → routes to that mode's setup, which now has a `SAVE` button in its header to capture the current config.
+
+#### Save flow from a mode setup
+
+Every mode setup (Tabata, EMOM, AMRAP, For Time) gets a `SAVE` icon in the screen's top-right corner. Tapping it opens a modal:
+
+- Pre-filled name from the most recent template loaded into this mode (or empty).
+- Same overwrite-on-name-collision flow as the web Complex SAVE.
+- On confirm: appends/updates the `SavedTimer` in the unified store and pops back to setup (or navigates to the Saved tab — configurable later).
+
+Complex keeps its in-builder `SAVE` button (which writes into the same unified `saved-timers-v1` store, so a Complex template appears in the Saved list alongside everything else). The legacy `complex-templates-v1` localStorage key from the web does **not** carry over — the native build starts a fresh `saved-timers-v1` store. A one-shot migration (`if (complex-templates-v1 && !saved-timers-v1) import them`) can be added if web users install the app and want their workouts back, but it's not Phase-2 required.
+
+#### Mode summary formatter (`summarize(timer): string`)
+
+```ts
+switch (timer.mode) {
+  case 'tabata':   return `${rounds} rounds · ${work}/${rest}`;
+  case 'emom':     return `${rounds} rounds · every ${workTotal}s` + (rest ? ` · ${rest}s rest` : '');
+  case 'amrap':    return `${duration} min`;
+  case 'fortime':  return `${duration} min` + (overtime ? ' · OT on' : '');
+  case 'complex':  return `${loops.length} loops · ${formatMMSS(total)} total`;
+}
+```
+
+Each card uses this for the single-line config summary.
+
+#### Why this isn't on the web
+
+- One-handed mobile UX benefits from a list-first view; the web already shows all six modes on Home in two seconds with a mouse.
+- Cross-mode search / sort / recent-first really pays off on a phone where scrolling and visual scanning are the navigation.
+- The web's surface area is intentionally lean — the Complex builder's in-page templates panel covers the only mode where saving config really matters.
+
+### Sharing code with the web
+
+The cleanest path: extract `shared/` into a workspace package (npm or pnpm workspaces) referenced by both `timeyourwod/` (web) and `timeyourwod-native/`. Logic ports verbatim; rendering layers diverge. If the web later migrates to React Native Web, both targets can share components too, but that's a follow-on, not a Phase-2 requirement.
+
+### Risk / decisions to make before starting
+
+- **iOS app continuity.** If the existing native app at `id6698851328` was built with SwiftUI, the RN rebuild replaces it (same bundle id, same app store listing) rather than shipping a second listing. Coordinate the cutover.
+- **Background audio policy.** iOS's `AVAudioSession` category matters — playback only works when the right category is set; choose `playback` (not `ambient`) so the GO beep fires on a screen-locked phone.
+- **Android Play Store data safety form.** Settings + templates are device-local; analytics is the only data leaving the device. The form is short but mandatory.
+- **Initial scope of templates sync.** Phase 2 ships device-local only (`AsyncStorage`). Cross-device sync (iCloud / Firebase) is Phase 3.
+
+### What this doc still won't do
+
+It won't replace the existing iOS app overnight. The realistic timeline is 3–5 weeks for a single dev to reach feature parity and pass App Store / Play review, with the runtime port being the easy part and EAS Build / store submission being the longest pole.

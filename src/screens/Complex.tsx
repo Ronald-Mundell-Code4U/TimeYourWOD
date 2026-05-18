@@ -3,6 +3,7 @@ import { useSettings } from '../contexts/SettingContext';
 import { TimerDisplay } from '../components/TimerDisplay';
 import { TimerScreen } from '../components/TimerScreen';
 import { FieldRow } from '../components/FieldRow';
+import { TemplatesPanel } from '../components/TemplatesPanel';
 import { useTimerFontSize } from '../hooks/useTimerFontSize';
 import { useWakeLock } from '../hooks/useWakeLock';
 import { COUNTDOWN_TIME, formatMMSS, formatTimeFromNow, playSafe } from '../lib/timer-utils';
@@ -29,23 +30,7 @@ const newId = () => Math.random().toString(36).slice(2, 10);
 const newInterval = (): Interval => ({ id: newId(), label: '', work: 30, rest: 10 });
 const newLoop = (): Loop => ({ id: newId(), rounds: 4, intervals: [newInterval()], transitionRest: 0 });
 
-/* ── templates (localStorage) ─────────────────────── */
-
-const TEMPLATES_KEY = 'complex-templates-v1';
-
-const loadTemplates = (): Record<string, Workout> => {
-  try {
-    const raw = localStorage.getItem(TEMPLATES_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-};
-const persistTemplates = (templates: Record<string, Workout>) => {
-  try {
-    localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates));
-  } catch {}
-};
+const COMPLEX_TEMPLATES_KEY = 'complex-templates-v1';
 
 /* ── timeline runtime ─────────────────────────────── */
 
@@ -110,15 +95,6 @@ const Complex: React.FC = () => {
   const fontSize = useTimerFontSize({ heatsEnabled: settings.heatsEnable });
 
   const [loops, setLoops] = useState<Workout>([newLoop()]);
-  const [templates, setTemplates] = useState<Record<string, Workout>>(() => loadTemplates());
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
-  const [saveModalOpen, setSaveModalOpen] = useState(false);
-  const [saveModalName, setSaveModalName] = useState('');
-  const [saveModalError, setSaveModalError] = useState('');
-  const [overwriteOpen, setOverwriteOpen] = useState(false);
-  const [overwriteName, setOverwriteName] = useState('');
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteName, setDeleteName] = useState('');
 
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -197,84 +173,14 @@ const Complex: React.FC = () => {
       })
     );
 
-  /* ── templates ──────────────────────────────────── */
-
-  const openSaveModal = () => {
-    setSaveModalName(selectedTemplate);
-    setSaveModalError('');
-    setSaveModalOpen(true);
-  };
-  const closeSaveModal = () => {
-    setSaveModalOpen(false);
-    setSaveModalError('');
-  };
-  const persistSave = (name: string) => {
-    const next = { ...templates, [name]: loops };
-    setTemplates(next);
-    persistTemplates(next);
-    setSelectedTemplate(name);
-    setSaveModalOpen(false);
-    setOverwriteOpen(false);
-    setSaveModalError('');
-  };
-  const confirmSaveModal = () => {
-    const name = saveModalName.trim();
-    if (!name) {
-      setSaveModalError('Name required.');
-      return;
-    }
-    if (templates[name] && name !== selectedTemplate) {
-      setOverwriteName(name);
-      setOverwriteOpen(true);
-      return;
-    }
-    persistSave(name);
-  };
-  const confirmOverwrite = () => persistSave(overwriteName);
-  const cancelOverwrite = () => setOverwriteOpen(false);
-
-  // close on Escape — top-most modal wins
-  useEffect(() => {
-    if (!saveModalOpen && !overwriteOpen && !deleteOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      if (deleteOpen) cancelDelete();
-      else if (overwriteOpen) cancelOverwrite();
-      else if (saveModalOpen) closeSaveModal();
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [saveModalOpen, overwriteOpen, deleteOpen]);
-  const loadTemplate = (name: string) => {
-    if (!name) return;
-    const tpl = templates[name];
-    if (!tpl) return;
-    // re-id everything to avoid React key collisions
-    const cloned: Workout = tpl.map((l) => ({
+  /* ── templates: loaded workouts need fresh ids so React keys stay unique ─── */
+  const handleTemplateLoad = (loaded: Workout) => {
+    const cloned: Workout = loaded.map((l) => ({
       ...l,
       id: newId(),
       intervals: l.intervals.map((iv) => ({ ...iv, id: newId() })),
     }));
     setLoops(cloned);
-    setSelectedTemplate(name);
-  };
-  const loadSelectedTemplate = () => {
-    if (selectedTemplate) loadTemplate(selectedTemplate);
-  };
-  const openDeleteModal = () => {
-    if (!selectedTemplate) return;
-    setDeleteName(selectedTemplate);
-    setDeleteOpen(true);
-  };
-  const cancelDelete = () => setDeleteOpen(false);
-  const confirmDelete = () => {
-    if (!deleteName) return;
-    const next = { ...templates };
-    delete next[deleteName];
-    setTemplates(next);
-    persistTemplates(next);
-    setSelectedTemplate('');
-    setDeleteOpen(false);
   };
 
   /* ── runtime heat compute ───────────────────────── */
@@ -416,7 +322,6 @@ const Complex: React.FC = () => {
 
   /* ── setup view ─────────────────────────────────── */
   if (!running) {
-    const templateNames = Object.keys(templates).sort();
     return (
       <div className="complex-shell">
         <div className="complex-shell__title">
@@ -449,34 +354,12 @@ const Complex: React.FC = () => {
             </button>
           </div>
 
-          <div className="templates">
-            <select
-              className="templates__select"
-              value={selectedTemplate}
-              onChange={(e) => setSelectedTemplate(e.target.value)}
-              aria-label="select template"
-            >
-              <option value="">— SELECT TEMPLATE —</option>
-              {templateNames.map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-            {selectedTemplate && (
-              <button type="button" className="btn-ghost" onClick={loadSelectedTemplate}>
-                LOAD
-              </button>
-            )}
-            <button type="button" className="btn-ghost" onClick={openSaveModal}>
-              SAVE
-            </button>
-            {selectedTemplate && (
-              <button type="button" className="btn-ghost" onClick={openDeleteModal}>
-                DELETE
-              </button>
-            )}
-          </div>
+          <TemplatesPanel<Workout>
+            storageKey={COMPLEX_TEMPLATES_KEY}
+            currentValue={loops}
+            onLoad={handleTemplateLoad}
+            noun="workout"
+          />
         </div>
 
         <div className="complex-shell__footer">
@@ -494,148 +377,6 @@ const Complex: React.FC = () => {
             Total <span className="total-line__value">{formatMMSS(totalSeconds)}</span>
           </div>
         </div>
-
-        {saveModalOpen && (
-          <div
-            className="modal-backdrop"
-            onClick={closeSaveModal}
-            role="presentation"
-          >
-            <div
-              className="modal"
-              onClick={(e) => e.stopPropagation()}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="save-modal-title"
-            >
-              <h2 id="save-modal-title" className="modal__title">
-                Save workout
-              </h2>
-              <p className="modal__body">
-                Give this workout a name. You can load it again from the templates dropdown.
-              </p>
-              <form
-                className="modal__form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  confirmSaveModal();
-                }}
-              >
-                <input
-                  type="text"
-                  className="modal__input"
-                  autoFocus
-                  value={saveModalName}
-                  onChange={(e) => {
-                    setSaveModalName(e.target.value);
-                    if (saveModalError) setSaveModalError('');
-                  }}
-                  placeholder="e.g. Wednesday strength"
-                  maxLength={64}
-                  aria-label="template name"
-                  aria-invalid={!!saveModalError}
-                />
-                {saveModalError && (
-                  <div
-                    style={{
-                      fontSize: '0.78rem',
-                      letterSpacing: '0.1em',
-                      color: 'var(--alert)',
-                    }}
-                  >
-                    {saveModalError}
-                  </div>
-                )}
-                <div className="modal__actions">
-                  <button type="button" className="btn-ghost" onClick={closeSaveModal}>
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn-cmd"
-                    disabled={!saveModalName.trim()}
-                  >
-                    Save
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {overwriteOpen && (
-          <div
-            className="modal-backdrop"
-            onClick={cancelOverwrite}
-            role="presentation"
-          >
-            <div
-              className="modal"
-              onClick={(e) => e.stopPropagation()}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="overwrite-modal-title"
-            >
-              <h2 id="overwrite-modal-title" className="modal__title">
-                Replace template?
-              </h2>
-              <p className="modal__body">
-                A template named <strong style={{ color: 'var(--fg)' }}>{overwriteName}</strong>{' '}
-                already exists. Replace it with the current workout?
-              </p>
-              <div className="modal__actions">
-                <button type="button" className="btn-ghost" onClick={cancelOverwrite}>
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn-cmd"
-                  onClick={confirmOverwrite}
-                  autoFocus
-                >
-                  Replace
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {deleteOpen && (
-          <div
-            className="modal-backdrop"
-            onClick={cancelDelete}
-            role="presentation"
-          >
-            <div
-              className="modal"
-              onClick={(e) => e.stopPropagation()}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="delete-modal-title"
-            >
-              <h2 id="delete-modal-title" className="modal__title">
-                Delete template?
-              </h2>
-              <p className="modal__body">
-                <strong style={{ color: 'var(--fg)' }}>{deleteName}</strong> will be removed
-                permanently. This can't be undone.
-              </p>
-              <div className="modal__actions">
-                <button type="button" className="btn-ghost" onClick={cancelDelete}>
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn-cmd"
-                  onClick={confirmDelete}
-                  autoFocus
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
