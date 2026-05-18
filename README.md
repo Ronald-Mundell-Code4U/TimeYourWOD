@@ -1,132 +1,201 @@
-# TimeYourWOD — starter build
+# TimeYourWOD
 
-A WOD timer web app: six modes (Clock, Tabata, For Time, EMOM, AMRAP, Complex), heats, custom beeps, dark/light themes, fullscreen, wake-lock, PWA-ready. Built with **React 18 + TypeScript + Vite + React Router**.
+Workout timer for the gym floor. Six modes, a full multi-loop Complex builder with saveable templates, heats support, two beep packs, dark/light themes, PWA install, and a companion iOS app.
 
-Designed to be legible from across a gym floor on a TV **and** thumb-friendly on a phone.
+- **Live web:** <https://timeyourwod.code4u.app>
+- **iOS app:** <https://apps.apple.com/us/app/timeyourwod/id6698851328>
+
+Built with **React 18 + TypeScript + Vite + React Router 6**. No state libraries, no UI kit — vanilla CSS variables + a single `SettingsContext`.
+
+---
 
 ## Run it
 
 ```bash
 npm install
-npm start          # or: npm run dev
+npm start          # or: npm run dev — boots Vite on http://localhost:3000
+npm run build      # tsc + vite build into /dist
+npm run preview    # serve the production build
 ```
 
-App boots on http://localhost:3000.
+Vite is configured with `host: true`, so once `npm start` is running you can also open `http://<your-laptop-ip>:3000` on a phone on the same Wi-Fi.
 
-```bash
-npm run build      # production build to /dist
-npm run preview    # preview the production build
-```
+---
 
-## Test on your phone
+## Modes
 
-Vite is configured with `host: true`, so once `npm start` is running, open `http://<your-laptop-ip>:3000` on your phone (same Wi-Fi). The app is responsive at every breakpoint:
+Six modes, all reached from Home:
 
-| Breakpoint | Width      | Behavior                                                                 |
-| ---------- | ---------- | ------------------------------------------------------------------------ |
-| phone      | ≤ 559 px   | Footer hidden, tighter padding, heats stack vertically in portrait       |
-| tablet     | 560–900 px | Full footer, side-by-side heats in landscape, stacked in portrait        |
-| desktop    | > 900 px   | Full experience — tuned for big screens and gym TVs                      |
+| Mode      | What it does                                                                 |
+| --------- | ---------------------------------------------------------------------------- |
+| Clock     | Wall clock or stopwatch. No countdown.                                       |
+| Tabata    | `FOR n ROUNDS` of `WORK s` / `REST s`.                                       |
+| For Time  | A capped timer with optional overtime (set in Settings).                     |
+| EMOM      | `FOR n ROUNDS` of `EVERY s SECONDS` work, optional `REST s` between rounds.  |
+| AMRAP     | A simple `FOR n MINUTES` countdown.                                          |
+| Complex   | Multi-loop workout builder — see below.                                       |
 
-Portrait phone users see a non-blocking "↻ Rotate for the full scoreboard" hint that they can dismiss; the app is **fully usable** in portrait regardless.
+Every timer starts with a **10-second pre-countdown** (beeps at 3, 2, 1 and a distinct final beep on GO). The same 3-2-1-GO cue fires at every interval boundary and at workout end.
 
-## How the timers work
+### Pause, reset, restart
 
-- Every timer starts with a **10-second pre-countdown**. Beeps fire at 3, 2, 1, with a distinct final "GO" beep.
-- The same 3-2-1 + final beep pattern fires at the end of every active interval.
-- **Tap the timer** to pause/resume.
+- **Tap the timer** to pause. A full-screen `PAUSED` overlay appears with a ❚❚ glyph and "Tap to resume" hint. Tap anywhere on the timer to resume.
 - **Tap the invisible top-left hot-corner** (20% × 20% of the screen) to reset.
-- When the workout completes, a status line + RESTART button appear.
+- When the workout completes, a status line and `RESTART` button appear below the timer.
 
-### Heats (global setting)
+---
 
-Enable in the cog → Settings drawer. The second timer starts after the configured delay, and end-times for both heats are projected below the timer.
+## Complex builder
 
-### Overtime (For Time)
-
-Set in Settings → "For Time → Overtime". When the cap is hit the clock turns red and counts upward through the overtime window before ending.
-
-## Replacing the beep audio
-
-Drop your own audio files into:
+`COMPLEX` is a nested workout structure:
 
 ```
-public/Audio/default/
-  Beep.wav         # used for 3, 2, 1
-  FinishBeep.wav   # used for "GO" / interval end / final
-public/Audio/second/
-  Beep1.wav        # alternative — used for 3
-  Beep2.wav        # used for 2
-  Beep3.wav        # used for 1
-  FinalBeep.wav    # used for GO / final
+Workout
+ └── Loop[]
+      ├── Interval[]              (each: work + rest)
+      ├── rounds                  (how many times the interval list repeats)
+      └── transitionRest          (seconds appended after this loop, if it isn't the last)
 ```
 
-Any browser-playable format works (.wav, .mp3, .ogg). If you change extensions or add packs, edit `BEEP_PACKS` in `src/contexts/SettingContext.tsx`.
+A sticky title bar sits at the top, the **START** button + total duration sit pinned at the bottom, and the loops scroll between them. Inside a loop you can add / remove / reorder interval blocks (↑ ↓ ×), edit work/rest seconds, and set a per-loop round count and transition rest. Loops themselves can be reordered, duplicated, or deleted.
 
-The starter ships with synthesized placeholder beeps so the project runs out of the box — replace them.
+### Templates
+
+Save the current workout to `localStorage` under a name; reload it later. All persisted in key `complex-templates-v1` as JSON. UI:
+
+- Select a template from the dropdown — selection alone doesn't load anything.
+- Hit **LOAD** to populate the builder with that template.
+- Hit **SAVE** to capture the current workout as a new template (or overwrite an existing one — confirmed in a modal).
+- Hit **DELETE** to remove the selected template (also modal-confirmed).
+
+---
+
+## Heats
+
+Toggle from the cog → Settings → `HEATS`. When enabled, the workout runs as two parallel scoreboards offset by a configurable `Delay · MM:SS`. Both heats are pre-cached into the timeline so heat 2 displays a long countdown to its own GO while heat 1 is already running. On landscape screens the two heats sit side-by-side; on phone portrait they stack. Both heat displays always reserve the same vertical footprint so the layout never jitters.
+
+End-time projections (`HEAT 1 ENDS · 14:32`) are shown below the timer when heats are enabled, falling back to a single `WORKOUT ENDS · …` line otherwise.
+
+---
+
+## Beep packs
+
+Two packs ship in the box, configured in [`src/contexts/SettingContext.tsx`](src/contexts/SettingContext.tsx):
+
+| Pack    | Files                                                              |
+| ------- | ------------------------------------------------------------------ |
+| DEFAULT | `Audio/default/Beep.mp3` × 3 + `Audio/default/FinalBeep.mp3`       |
+| SIMPLE  | `Audio/second/Beep1/2/3.mp3` + `Audio/second/FinalBeep.mp3`        |
+
+Pick which one is active in Settings → `BEEP PACK`. The **PREVIEW 3 · 2 · 1 · GO** button plays the entire sequence exactly as the running timer fires it.
+
+Drop your own MP3/WAV/OGG into the matching folders and update the `files` array in `BEEP_PACKS`.
+
+---
+
+## Settings (cog drawer)
+
+- **Theme** — `DARK` (default) / `LIGHT`. The accent (`--accent`) is just the foreground; the only red in the app is the For Time overtime scoreboard.
+- **Heats** — toggle + a MM:SS picker for the delay between heat 1 and heat 2.
+- **For Time → Overtime** — MM:SS picker. When the cap is hit the clock turns red and counts upward through the overtime window. Set to `00:00` to disable.
+- **Beep pack** — dropdown + preview button.
+
+All settings persist to `localStorage` under `app-settings`.
+
+---
+
+## Mobile install prompt + iOS app
+
+On phones, a full-screen modal pops up shortly after page load offering the native iOS app on the App Store. After either action (`Get the App` or `Not now`) the modal is permanently disabled on that device — dismissal is persisted to `localStorage` under `install-prompt-dismissed-v1`. The modal is also suppressed when the page is already running as an installed PWA (`display-mode: standalone` or `navigator.standalone`).
+
+The web app itself is also installable as a PWA via Add to Home Screen — the service worker (`public/service-worker.js`, currently `timeyourwod-v3`) caches the app shell, all icon assets, and every beep MP3 so the timer works offline.
+
+---
+
+## Configuration to update before deploy
+
+Three spots reference external services / accounts and need to be set to your own values:
+
+1. **Google Analytics Measurement ID** — currently `G-XXXXXXXXXX` in both:
+   - [`index.html`](index.html) (script `src` + `gtag('config', …)` call)
+   - [`src/lib/gtag.ts`](src/lib/gtag.ts) (the `GA_ID` constant)
+2. **Ko-fi username** — currently `timeyourwod` in [`index.html`](index.html) (`kofiWidgetOverlay.draw('timeyourwod', …)`).
+3. **App Store URL** — currently the production TimeYourWOD link in [`src/components/InstallPrompt.tsx`](src/components/InstallPrompt.tsx) as `APP_STORE_URL`.
+
+The PWA manifest (`public/manifest.json`) is wired up to the included icon set (`favicon.ico`, `favicon-16x16.png`, `favicon-32x32.png`, `apple-touch-icon.png`, `android-chrome-192x192.png`, `android-chrome-512x512.png` with both `any` and `maskable` purposes). Replace the PNGs to rebrand.
+
+---
 
 ## Project layout
 
 ```
 public/
-  Audio/default/*    # default beep pack
-  Audio/second/*     # alternate beep pack
-  manifest.json      # PWA manifest
-  service-worker.js  # offline cache
-  favicon.svg
+  Audio/
+    default/Beep.mp3, FinalBeep.mp3
+    second/Beep1.mp3, Beep2.mp3, Beep3.mp3, FinalBeep.mp3
+  android-chrome-{192,512}x{192,512}.png
+  apple-touch-icon.png
+  favicon{.ico,.svg,-16x16.png,-32x32.png}
+  manifest.json
+  service-worker.js
+
 src/
-  App.tsx
-  main.tsx
-  index.css          # design tokens + global styles
-  vite-env.d.ts
+  App.tsx                           # Router + global components
+  main.tsx                          # entry; mounts SettingsProvider
+  index.css                         # design tokens, form-stack, modal, etc.
   contexts/
-    SettingContext.tsx
+    SettingContext.tsx              # settings + audio bundle + iOS unlock
   hooks/
-    useViewport.ts
-    useWakeLock.ts
-    useTimerFontSize.ts
+    useViewport.ts                  # width/height/breakpoint/orientation
+    useWakeLock.ts                  # Screen Wake Lock API wrapper
+    useTimerFontSize.ts             # responsive scoreboard sizing
   lib/
-    gtag.ts
-    timer-utils.ts
+    gtag.ts                         # Google Analytics helper
+    timer-utils.ts                  # COUNTDOWN_TIME, formatters, playSafe
   components/
-    Button.tsx
-    ButtonCMD.tsx
-    CustomFooter.tsx
-    CustomHeader.tsx
-    CustomTimePicker.tsx
-    KoFiPopUp.tsx
-    PageView.tsx
-    RotateHint.tsx
-    SetupShell.tsx
-    SideDrawer.tsx
-    TimerDisplay.tsx
-    TimerScreen.tsx
-    Toggle.tsx
-    UpdatePopUp.tsx
+    Button.tsx, ButtonCMD.tsx       # Home nav button + primary CMD button
+    CustomHeader.tsx                # back / wordmark / cog
+    CustomTimePicker.tsx            # MM:SS picker
+    FieldRow.tsx                    # PREFIX [ input ] SUFFIX grid row
+    InstallPrompt.tsx               # mobile App Store modal
+    PageView.tsx                    # GA page_view tracker
+    RotateHint.tsx                  # portrait phone hint
+    SetupShell.tsx                  # title + centered form layout
+    SideDrawer.tsx                  # cog settings drawer
+    TimerDisplay.tsx                # scoreboard digits + label/round/phase
+    TimerScreen.tsx                 # progress rail + paused overlay + heat grid
+    Toggle.tsx                      # binary toggle with reserved-width label
+    UpdatePopUp.tsx                 # one-shot info banner
   screens/
-    About.tsx
-    Amrap.tsx
-    Clock.tsx
-    Complex.tsx
-    Emom.tsx
-    ForTime.tsx
-    Home.tsx
-    PrivacyPolicy.tsx
-    Tabata.tsx
+    Home.tsx                        # 6 nav buttons + About/Privacy
+    Clock.tsx, Tabata.tsx, ForTime.tsx, Emom.tsx, Amrap.tsx
+    Complex.tsx                     # loops + intervals + templates builder
+    About.tsx                       # long-form story + Donate CTA
+    PrivacyPolicy.tsx               # 11-section policy
 ```
+
+---
 
 ## Design notes
 
-- **Monospace everywhere.** JetBrains Mono is loaded from Google Fonts. Timer numerals use `font-variant-numeric: tabular-nums` so digits don't jitter.
-- **Accent color** is oxblood `#c43c3c`, used only for state (overtime, running indicators, primary action buttons).
-- **Background** is a low-contrast dot grid + scan-line pattern — terminal/scoreboard energy without overpowering the timer.
-- **Corner crosshairs** on the running timer give it a "viewfinder" feel.
-- **REC dot** blinks while a timer is live, switches to "PAUSED" when paused.
-- **Progress rail** at the top of the screen fills as the workout progresses.
+- **Monochrome by default.** `--accent` resolves to `--fg`, so every "accent" call site renders in plain white/black. The single hard-coded red is `--alert` (`#c43c3c`), used only for the overtime scoreboard.
+- **Two type families.** Body, labels, buttons, and timer numerals are JetBrains Mono. The `TIMEYOURWOD` wordmark uses a proportional sans-serif (`--font-display`) so the W has its natural width — monospace W's get squeezed and read poorly at large sizes.
+- **Tabular numerals.** The scoreboard sets `font-variant-numeric: tabular-nums` + `font-feature-settings: "tnum" 1, "zero" 1` so digits don't shift width when they change.
+- **Form rows.** Every setup screen uses a `.form-stack` CSS grid with symmetric side columns so the `[ INPUT ]` and the `START` button align under each other.
+- **Modals.** Save / overwrite / delete / install all share `.modal-backdrop` + `.modal`. Backdrop uses `var(--overlay)` (theme-aware: dark in dark mode, light in light mode). Escape and backdrop-click cancel; modals stack with Escape closing the top-most one first.
+- **No decoration.** No scan lines, no dot grid, no corner crosshairs — let the type carry it.
 
-## Notes on mobile
+---
 
-- **Audio unlock**: the first START tap unlocks the audio context (required by iOS Safari).
-- **Wake-lock**: the Screen Wake Lock API is requested when a timer is live, released on pause/reset. Falls back gracefully on browsers that don't support it.
-- **Safe areas**: the layout respects `env(safe-area-inset-*)` so headers/footers don't get eaten by notches or home indicators.
-- **PWA**: the manifest + service worker mean you can "Add to Home Screen" and it'll run offline.
+## Mobile notes
+
+- **Audio unlock** — calling `unlockAudio()` from the first user gesture mutes, plays, pauses, and unmutes each beep element, satisfying iOS Safari's "audio requires gesture" requirement. Triggered from each setup screen's `START` and from the preview button.
+- **Wake lock** — the Screen Wake Lock API is requested when a timer is live and released on pause/reset/unmount. Falls back gracefully on browsers that don't expose it.
+- **Safe areas** — `env(safe-area-inset-*)` is wired through `--safe-{t,r,b,l}` and used throughout the layout so headers, footers, modal padding, and the install prompt don't get eaten by notches or home indicators.
+- **PWA** — the manifest + service worker mean Add to Home Screen produces a fullscreen, offline-capable app.
+
+---
+
+## License
+
+MIT — do whatever, keep the copyright if you redistribute.
