@@ -130,7 +130,3 @@ src/
 - **Wake-lock**: the Screen Wake Lock API is requested when a timer is live, released on pause/reset. Falls back gracefully on browsers that don't support it.
 - **Safe areas**: the layout respects `env(safe-area-inset-*)` so headers/footers don't get eaten by notches or home indicators.
 - **PWA**: the manifest + service worker mean you can "Add to Home Screen" and it'll run offline.
-
-## License
-
-MIT — do whatever, keep the copyright if you redistribute.
