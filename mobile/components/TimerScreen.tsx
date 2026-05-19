@@ -34,7 +34,9 @@ export const TimerScreen: React.FC<Props> = ({
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      <View style={[styles.rail, { top: insets.top }]}>
+      {/* Stack header already accounts for insets.top — anchor to 0 so the
+          progress rail sits flush under the header, not pushed down a status bar. */}
+      <View style={[styles.rail, { top: 0 }]}>
         <View
           style={{
             height: '100%',
@@ -49,7 +51,7 @@ export const TimerScreen: React.FC<Props> = ({
         onPress={onReset}
         accessibilityLabel="reset timer"
         accessibilityRole="button"
-        style={[styles.hotCorner, { top: insets.top }]}
+        style={[styles.hotCorner, { top: 0 }]}
       />
 
       {/* clickable timer body — flex: 1 so it fills remaining space.
@@ -149,7 +151,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    height: 3,
+    height: 5,
     zIndex: 50,
   },
   hotCorner: {

@@ -839,7 +839,7 @@ input, select { font-family: inherit; }
   position: fixed;
   top: var(--safe-t);
   left: 0; right: 0;
-  height: 3px;
+  height: 5px;
   background: transparent;
   z-index: 50;
   pointer-events: none;
