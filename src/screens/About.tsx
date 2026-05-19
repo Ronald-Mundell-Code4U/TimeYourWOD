@@ -82,20 +82,7 @@ const About: React.FC = () => {
               href={KOFI_URL}
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '0.75rem 1.5rem',
-                border: '2px solid var(--fg)',
-                borderRadius: 2,
-                color: 'var(--fg)',
-                fontWeight: 700,
-                letterSpacing: '0.2em',
-                textTransform: 'uppercase',
-                fontSize: '0.85rem',
-                minHeight: 48,
-              }}
+              className="btn-cmd"
             >
               Donate
             </a>

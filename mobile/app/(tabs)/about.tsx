@@ -41,11 +41,7 @@ const About: React.FC = () => {
 
       <View style={styles.actions}>
         <CmdButton text="Support on Ko-fi" onPress={() => Linking.openURL(KOFI_URL)} />
-        <CmdButton
-          text="Open the web version"
-          variant="ghost"
-          onPress={() => Linking.openURL(WEB_URL)}
-        />
+        <CmdButton text="Open the web version" onPress={() => Linking.openURL(WEB_URL)} />
       </View>
 
       <Text style={[styles.signoff, { color: colors.fg }]}>

@@ -124,7 +124,6 @@ const Settings: React.FC = () => {
             />
             <CmdButton
               text={previewing ? 'PLAYING…' : 'PREVIEW 3 · 2 · 1 · GO'}
-              variant="ghost"
               onPress={playPreview}
               disabled={previewing}
             />

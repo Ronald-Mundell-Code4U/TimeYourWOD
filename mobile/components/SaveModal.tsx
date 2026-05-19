@@ -14,6 +14,7 @@ import {
 import { useTheme } from '../theme/useTheme';
 import { useSavedTimers } from '../contexts/SavedTimersContext';
 import type { SavedTimer } from '../shared/types';
+import { CmdButton } from './CmdButton';
 
 interface Props {
   visible: boolean;
@@ -126,23 +127,8 @@ export const SaveModal: React.FC<Props> = ({
             />
             {!!error && <Text style={[styles.error, { color: colors.alert }]}>{error}</Text>}
             <View style={styles.actions}>
-              <Pressable
-                onPress={onClose}
-                style={[styles.btn, styles.ghost, { borderColor: colors.line }]}
-              >
-                <Text style={[styles.btnText, { color: colors.fg }]}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                onPress={submit}
-                disabled={!name.trim()}
-                style={[
-                  styles.btn,
-                  styles.cmd,
-                  { borderColor: colors.fg, opacity: name.trim() ? 1 : 0.4 },
-                ]}
-              >
-                <Text style={[styles.btnText, { color: colors.fg }]}>Save</Text>
-              </Pressable>
+              <CmdButton text="Cancel" onPress={onClose} />
+              <CmdButton text="Save" onPress={submit} disabled={!name.trim()} />
             </View>
           </Pressable>
         </ScrollView>
@@ -193,17 +179,6 @@ const styles = StyleSheet.create({
   },
   error: { fontSize: 12, letterSpacing: 1 },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 4 },
-  btn: {
-    minWidth: 96,
-    height: 44,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 2,
-  },
-  ghost: { borderWidth: 2 },
-  cmd: { borderWidth: 2 },
-  btnText: { fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', fontSize: 13 },
 });
 
 export default SaveModal;

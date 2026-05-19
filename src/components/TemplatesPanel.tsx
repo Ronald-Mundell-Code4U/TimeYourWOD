@@ -197,7 +197,7 @@ export function TemplatesPanel<T>({ storageKey, currentValue, onLoad, noun = 'wo
                 </div>
               )}
               <div className="modal__actions">
-                <button type="button" className="btn-ghost" onClick={closeSave}>
+                <button type="button" className="btn-cmd" onClick={closeSave}>
                   Cancel
                 </button>
                 <button type="submit" className="btn-cmd" disabled={!saveName.trim()}>
@@ -226,7 +226,7 @@ export function TemplatesPanel<T>({ storageKey, currentValue, onLoad, noun = 'wo
               already exists. Replace it with the current {noun}?
             </p>
             <div className="modal__actions">
-              <button type="button" className="btn-ghost" onClick={cancelOverwrite}>
+              <button type="button" className="btn-cmd" onClick={cancelOverwrite}>
                 Cancel
               </button>
               <button type="button" className="btn-cmd" onClick={confirmOverwrite} autoFocus>
@@ -254,7 +254,7 @@ export function TemplatesPanel<T>({ storageKey, currentValue, onLoad, noun = 'wo
               permanently. This can't be undone.
             </p>
             <div className="modal__actions">
-              <button type="button" className="btn-ghost" onClick={cancelDelete}>
+              <button type="button" className="btn-cmd" onClick={cancelDelete}>
                 Cancel
               </button>
               <button type="button" className="btn-cmd" onClick={confirmDelete} autoFocus>

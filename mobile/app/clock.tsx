@@ -78,7 +78,7 @@ const Clock: React.FC = () => {
                   text={paused ? 'RESUME' : 'PAUSE'}
                   onPress={() => setPaused((p) => !p)}
                 />
-                <CmdButton text="RESET" variant="ghost" onPress={reset} />
+                <CmdButton text="RESET" onPress={reset} />
               </>
             ))}
         </View>

@@ -193,9 +193,10 @@ export const SideDrawer: React.FC<Props> = ({ trigger }) => {
               </select>
               <button
                 type="button"
-                className="btn-ghost"
+                className="btn-cmd"
                 onClick={playPreview}
                 disabled={previewing}
+                style={previewing ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
                 aria-label="preview 3-2-1-GO"
               >
                 {previewing ? 'PLAYING…' : 'PREVIEW 3 · 2 · 1 · GO'}
