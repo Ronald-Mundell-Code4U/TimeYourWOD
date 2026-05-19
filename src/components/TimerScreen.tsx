@@ -19,12 +19,6 @@ interface Props {
   running: boolean;
 }
 
-const LiveIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
-    <circle cx="7" cy="7" r="5" fill="currentColor" />
-  </svg>
-);
-
 const PauseIcon = ({ size = 14 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden>
     <rect x="3" y="2" width="3" height="10" fill="currentColor" />
@@ -84,26 +78,6 @@ export const TimerScreen: React.FC<Props> = ({
         }}
       />
 
-      {/* small live / pause indicator — top center */}
-      {running && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 'calc(14px + var(--safe-t))',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            color: 'var(--fg-dim)',
-            zIndex: 65,
-            display: 'inline-flex',
-            alignItems: 'center',
-            opacity: paused ? 0.4 : 1,
-          }}
-          aria-label={paused ? 'paused' : 'live'}
-        >
-          {paused ? <PauseIcon /> : <span className="rec-dot" />}
-        </div>
-      )}
-
       {/* clickable timer body */}
       <div
         onClick={onTogglePause}
@@ -116,8 +90,8 @@ export const TimerScreen: React.FC<Props> = ({
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          gap: '1rem',
-          padding: '1rem',
+          gap: '0.5rem',
+          padding: '0.25rem 1rem',
           minHeight: 0,
           position: 'relative',
         }}

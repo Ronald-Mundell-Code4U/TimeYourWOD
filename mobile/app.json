@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "TimeYourWOD",
+    "slug": "timeyourwod",
+    "version": "0.1.0",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "scheme": "timeyourwod",
+    "backgroundColor": "#0a0a0a",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.code4u.timeyourwod",
+      "buildNumber": "1",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "app.code4u.timeyourwod",
+      "versionCode": 1
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-av",
+        {
+          "microphonePermission": false
+        }
+      ],
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

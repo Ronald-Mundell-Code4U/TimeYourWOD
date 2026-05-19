@@ -6,6 +6,7 @@ import { SetupShell } from '../components/SetupShell';
 import { TimerScreen } from '../components/TimerScreen';
 import { FieldRow } from '../components/FieldRow';
 import { useTimerFontSize } from '../hooks/useTimerFontSize';
+import { useMonotonicElapsed } from '../hooks/useMonotonicElapsed';
 import { useWakeLock } from '../hooks/useWakeLock';
 import {
   COUNTDOWN_TIME,
@@ -22,17 +23,13 @@ const ForTime: React.FC = () => {
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
   const [ended, setEnded] = useState(false);
-  const [elapsed, setElapsed] = useState(0); // seconds since START
   const beepFiredRef = useRef<Set<string>>(new Set());
 
-  useWakeLock(running && !paused && !ended);
+  const { elapsed, reset: resetElapsed } = useMonotonicElapsed(
+    running && !paused && !ended
+  );
 
-  // 1Hz tick
-  useEffect(() => {
-    if (!running || paused || ended) return;
-    const id = setInterval(() => setElapsed((s) => s + 1), 1000);
-    return () => clearInterval(id);
-  }, [running, paused, ended]);
+  useWakeLock(running && !paused && !ended);
 
   const baseSeconds = duration * 60;
   const overtimeSeconds = settings.fortime;
@@ -64,20 +61,22 @@ const ForTime: React.FC = () => {
         finished: false,
       };
     }
-    const t = rel - COUNTDOWN_TIME; // seconds since go
+    const t = rel - COUNTDOWN_TIME; // seconds since GO
     if (t >= 0 && t < totalSeconds) {
-      const remainingTotal = totalSeconds - t;
       const overtimeActive = t >= baseSeconds;
-      // beeps at start, end of base, and end of overtime
+      // beeps: GO at t=0; 3-2-1 before the cap; "final" when the cap is hit
+      // (entering overtime); then 3-2-1 before total end; "final" at end.
       let beep: string | null = null;
-      if (t === 0) beep = 'final'; // GO
+      if (t === 0) beep = 'final';
       else if (t === baseSeconds - 3 || t === totalSeconds - 3) beep = 'b1';
       else if (t === baseSeconds - 2 || t === totalSeconds - 2) beep = 'b2';
       else if (t === baseSeconds - 1 || t === totalSeconds - 1) beep = 'b3';
       else if (t === baseSeconds && overtimeSeconds > 0) beep = 'final';
-      const showSeconds = overtimeActive ? t - baseSeconds : remainingTotal - overtimeSeconds;
       return {
-        display: formatMMSS(showSeconds),
+        // For Time counts UP from 00:00. The clock keeps climbing through
+        // overtime — `overtime: true` turns the digits red but the value
+        // continues from baseSeconds (e.g., 05:00, 05:01, 05:02 ...).
+        display: formatMMSS(t),
         overtime: overtimeActive,
         active: true,
         beep,
@@ -85,8 +84,10 @@ const ForTime: React.FC = () => {
       };
     }
     return {
-      display: '00:00',
-      overtime: false,
+      // Show the final elapsed time the workout ended at (the cap with no
+      // overtime, or cap + overtime if configured), rather than 00:00.
+      display: formatMMSS(totalSeconds),
+      overtime: overtimeSeconds > 0,
       active: false,
       beep: t === totalSeconds ? 'final' : null,
       finished: true,
@@ -124,7 +125,7 @@ const ForTime: React.FC = () => {
     setRunning(false);
     setPaused(false);
     setEnded(false);
-    setElapsed(0);
+    resetElapsed();
     beepFiredRef.current.clear();
   };
 
@@ -132,6 +133,7 @@ const ForTime: React.FC = () => {
     if (!duration) return;
     unlockAudio();
     beepFiredRef.current.clear();
+    resetElapsed();
     setRunning(true);
   };
 

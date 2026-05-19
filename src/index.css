@@ -134,9 +134,10 @@ input, select { font-family: inherit; }
   cursor: pointer;
   min-height: 48px;
   min-width: 140px;
-  transition: background 80ms linear, color 80ms linear;
+  transition: background 80ms linear, color 80ms linear, transform 80ms ease;
 }
 .btn-cmd:hover, .btn-cmd:focus-visible { background: var(--fg); color: var(--bg); outline: none; }
+.btn-cmd:active { transform: translateY(1px); }
 
 .btn-ghost {
   background: transparent;
@@ -515,6 +516,190 @@ input, select { font-family: inherit; }
   min-width: 0;
 }
 
+/* ─── complex outline drawer (right edge, slide-in) ──
+   z-index 150 sits above CustomHeader (60) and below the settings drawer
+   (201) + modal backdrops (300), so the × in the drawer head is always
+   reachable and nothing layered above it can swallow the click. */
+.timeline-handle {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 150;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 0.55rem;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--fg);
+  border-right: none;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: background 100ms linear, color 100ms linear;
+}
+.timeline-handle:hover,
+.timeline-handle:focus-visible {
+  background: var(--fg);
+  color: var(--bg);
+  outline: none;
+}
+.timeline-handle span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.timeline-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(380px, 92vw);
+  z-index: 150;
+  background: var(--bg);
+  border-left: 1px solid var(--fg);
+  box-shadow: -10px 0 28px rgba(0, 0, 0, 0.4);
+  transform: translateX(100%);
+  transition: transform 220ms cubic-bezier(0.3, 0.7, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--safe-t);
+  padding-right: var(--safe-r);
+  padding-bottom: var(--safe-b);
+}
+.timeline-drawer.is-open { transform: translateX(0); }
+.timeline-drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.timeline-drawer__title {
+  font-size: 0.82rem;
+  letter-spacing: 0.28em;
+  font-weight: 800;
+  color: var(--fg);
+}
+.timeline-drawer__close {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--fg);
+  width: 32px;
+  height: 32px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+.timeline-drawer__close:hover { border-color: var(--fg); }
+.timeline-drawer__stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+}
+.timeline-drawer__stats strong {
+  color: var(--fg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  margin-left: 0.35rem;
+}
+
+.complex-timeline {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.85rem 0.75rem;
+  scroll-behavior: smooth;
+}
+.complex-timeline__group { margin-bottom: 1rem; }
+.complex-timeline__heading {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--fg);
+  font-weight: 700;
+  padding: 0.5rem 0.5rem 0.45rem;
+  border: none;
+  background: transparent;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0.35rem;
+  cursor: pointer;
+  transition: color 80ms linear;
+}
+.complex-timeline__heading:hover:not(:disabled) { color: var(--fg); }
+.complex-timeline__heading:disabled { cursor: default; color: var(--fg-dim); }
+
+.complex-timeline__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.complex-timeline__row {
+  display: grid;
+  grid-template-columns: 52px auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--fg-dim);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 80ms linear, border-color 80ms linear, color 80ms linear;
+}
+.complex-timeline__row:hover:not(:disabled),
+.complex-timeline__row:focus-visible {
+  background: var(--bg-elev);
+  border-color: var(--line);
+  color: var(--fg);
+  outline: none;
+}
+.complex-timeline__row:disabled { cursor: default; }
+
+.complex-timeline__phase {
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+.complex-timeline__dur {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+.complex-timeline__label {
+  color: var(--fg-dim);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ─── modal ─────────────────────────────────────── */
 .modal-backdrop {
   position: fixed;
@@ -648,19 +833,6 @@ input, select { font-family: inherit; }
   margin: 1rem 0;
 }
 
-/* live dot — blinks while a timer is running */
-.rec-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--fg);
-  animation: rec-blink 1.05s steps(2, end) infinite;
-  vertical-align: middle;
-}
-@keyframes rec-blink {
-  50% { opacity: 0.2; }
-}
 
 /* progress bar at top of running screen */
 .progress-rail {

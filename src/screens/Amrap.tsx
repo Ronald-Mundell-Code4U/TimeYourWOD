@@ -6,6 +6,7 @@ import { SetupShell } from '../components/SetupShell';
 import { TimerScreen } from '../components/TimerScreen';
 import { FieldRow } from '../components/FieldRow';
 import { useTimerFontSize } from '../hooks/useTimerFontSize';
+import { useMonotonicElapsed } from '../hooks/useMonotonicElapsed';
 import { useWakeLock } from '../hooks/useWakeLock';
 import { COUNTDOWN_TIME, formatMMSS, formatTimeFromNow, playSafe } from '../lib/timer-utils';
 
@@ -17,16 +18,13 @@ const Amrap: React.FC = () => {
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
   const [ended, setEnded] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
   const beepFiredRef = useRef<Set<string>>(new Set());
 
-  useWakeLock(running && !paused && !ended);
+  const { elapsed, reset: resetElapsed } = useMonotonicElapsed(
+    running && !paused && !ended
+  );
 
-  useEffect(() => {
-    if (!running || paused || ended) return;
-    const id = setInterval(() => setElapsed((s) => s + 1), 1000);
-    return () => clearInterval(id);
-  }, [running, paused, ended]);
+  useWakeLock(running && !paused && !ended);
 
   const totalSeconds = duration * 60;
 
@@ -95,7 +93,7 @@ const Amrap: React.FC = () => {
     setRunning(false);
     setPaused(false);
     setEnded(false);
-    setElapsed(0);
+    resetElapsed();
     beepFiredRef.current.clear();
   };
 
@@ -103,6 +101,7 @@ const Amrap: React.FC = () => {
     if (!duration) return;
     unlockAudio();
     beepFiredRef.current.clear();
+    resetElapsed();
     setRunning(true);
   };
 

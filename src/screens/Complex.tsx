@@ -4,7 +4,10 @@ import { TimerDisplay } from '../components/TimerDisplay';
 import { TimerScreen } from '../components/TimerScreen';
 import { FieldRow } from '../components/FieldRow';
 import { TemplatesPanel } from '../components/TemplatesPanel';
+import { ComplexTimeline } from '../components/ComplexTimeline';
 import { useTimerFontSize } from '../hooks/useTimerFontSize';
+import { useMonotonicElapsed } from '../hooks/useMonotonicElapsed';
+import { useViewport } from '../hooks/useViewport';
 import { useWakeLock } from '../hooks/useWakeLock';
 import { COUNTDOWN_TIME, formatMMSS, formatTimeFromNow, playSafe } from '../lib/timer-utils';
 
@@ -28,7 +31,7 @@ type Workout = Loop[];
 
 const newId = () => Math.random().toString(36).slice(2, 10);
 const newInterval = (): Interval => ({ id: newId(), label: '', work: 30, rest: 10 });
-const newLoop = (): Loop => ({ id: newId(), rounds: 4, intervals: [newInterval()], transitionRest: 0 });
+const newLoop = (): Loop => ({ id: newId(), rounds: 1, intervals: [newInterval()], transitionRest: 0 });
 
 const COMPLEX_TEMPLATES_KEY = 'complex-templates-v1';
 
@@ -90,25 +93,52 @@ const buildTimeline = (loops: Workout): Seg[] => {
 
 /* ── component ────────────────────────────────────── */
 
+const DRAWER_KEY = 'complex-timeline-drawer-open';
+
 const Complex: React.FC = () => {
   const { settings, audio, unlockAudio } = useSettings();
   const fontSize = useTimerFontSize({ heatsEnabled: settings.heatsEnable });
+  const { width } = useViewport();
 
   const [loops, setLoops] = useState<Workout>([newLoop()]);
 
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
   const [ended, setEnded] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
   const beepFiredRef = useRef<Set<string>>(new Set());
 
-  useWakeLock(running && !paused && !ended);
+  const { elapsed, reset: resetElapsed } = useMonotonicElapsed(
+    running && !paused && !ended
+  );
 
+  // collapsible workout-outline drawer (builder view, wider viewports only)
+  // Default OPEN on first visit so new users see the structure right away;
+  // remembers the user's last preference after that.
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem(DRAWER_KEY);
+      if (stored === null) return true;
+      return stored === 'true';
+    } catch {
+      return true;
+    }
+  });
   useEffect(() => {
-    if (!running || paused || ended) return;
-    const id = setInterval(() => setElapsed((s) => s + 1), 1000);
-    return () => clearInterval(id);
-  }, [running, paused, ended]);
+    try {
+      localStorage.setItem(DRAWER_KEY, String(drawerOpen));
+    } catch {}
+  }, [drawerOpen]);
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDrawerOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [drawerOpen]);
+  const drawerAvailable = width >= 800; // only render the handle on viewports with room
+
+  useWakeLock(running && !paused && !ended);
 
   const timeline = useMemo(() => buildTimeline(loops), [loops]);
   const totalSeconds = useMemo(() => timeline.reduce((a, s) => a + s.duration, 0), [timeline]);
@@ -291,7 +321,7 @@ const Complex: React.FC = () => {
     setRunning(false);
     setPaused(false);
     setEnded(false);
-    setElapsed(0);
+    resetElapsed();
     beepFiredRef.current.clear();
   };
 
@@ -299,6 +329,7 @@ const Complex: React.FC = () => {
     if (!totalSeconds) return;
     unlockAudio();
     beepFiredRef.current.clear();
+    resetElapsed();
     setRunning(true);
   };
 
@@ -322,62 +353,120 @@ const Complex: React.FC = () => {
 
   /* ── setup view ─────────────────────────────────── */
   if (!running) {
+    const scrollToLoop = (loopNum: number) => {
+      const id = loops[loopNum - 1]?.id;
+      if (!id) return;
+      const el = document.getElementById(`loop-card-${id}`);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
     return (
-      <div className="complex-shell">
-        <div className="complex-shell__title">
-          <h1>COMPLEX</h1>
-        </div>
-
-        <div className="complex-shell__body">
-          <div className="workout-builder">
-            {loops.map((loop, lIdx) => (
-              <LoopCard
-                key={loop.id}
-                loop={loop}
-                loopIdx={lIdx}
-                isFirst={lIdx === 0}
-                isLast={lIdx === loops.length - 1}
-                loopCount={loops.length}
-                onUpdate={(patch) => updateLoop(lIdx, patch)}
-                onDelete={() => removeLoop(lIdx)}
-                onDuplicate={() => duplicateLoop(lIdx)}
-                onMoveUp={() => moveLoop(lIdx, -1)}
-                onMoveDown={() => moveLoop(lIdx, 1)}
-                onUpdateInterval={(ivIdx, patch) => updateInterval(lIdx, ivIdx, patch)}
-                onAddInterval={() => addInterval(lIdx)}
-                onRemoveInterval={(ivIdx) => removeInterval(lIdx, ivIdx)}
-                onMoveInterval={(ivIdx, dir) => moveInterval(lIdx, ivIdx, dir)}
-              />
-            ))}
-            <button type="button" className="btn-ghost" onClick={addLoop}>
-              + ADD LOOP
-            </button>
+      <>
+        <div className="complex-shell">
+          <div className="complex-shell__title">
+            <h1>COMPLEX</h1>
           </div>
 
-          <TemplatesPanel<Workout>
-            storageKey={COMPLEX_TEMPLATES_KEY}
-            currentValue={loops}
-            onLoad={handleTemplateLoad}
-            noun="workout"
-          />
+          <div className="complex-shell__body">
+            <div className="workout-builder">
+              {loops.map((loop, lIdx) => (
+                <div key={loop.id} id={`loop-card-${loop.id}`}>
+                  <LoopCard
+                    loop={loop}
+                    loopIdx={lIdx}
+                    isFirst={lIdx === 0}
+                    isLast={lIdx === loops.length - 1}
+                    loopCount={loops.length}
+                    onUpdate={(patch) => updateLoop(lIdx, patch)}
+                    onDelete={() => removeLoop(lIdx)}
+                    onDuplicate={() => duplicateLoop(lIdx)}
+                    onMoveUp={() => moveLoop(lIdx, -1)}
+                    onMoveDown={() => moveLoop(lIdx, 1)}
+                    onUpdateInterval={(ivIdx, patch) => updateInterval(lIdx, ivIdx, patch)}
+                    onAddInterval={() => addInterval(lIdx)}
+                    onRemoveInterval={(ivIdx) => removeInterval(lIdx, ivIdx)}
+                    onMoveInterval={(ivIdx, dir) => moveInterval(lIdx, ivIdx, dir)}
+                  />
+                </div>
+              ))}
+              <button type="button" className="btn-ghost" onClick={addLoop}>
+                + ADD LOOP
+              </button>
+            </div>
+
+            <TemplatesPanel<Workout>
+              storageKey={COMPLEX_TEMPLATES_KEY}
+              currentValue={loops}
+              onLoad={handleTemplateLoad}
+              noun="workout"
+            />
+          </div>
+
+          <div className="complex-shell__footer">
+            <div className="form-stack">
+              <button
+                type="button"
+                className="form-stack__action"
+                onClick={start}
+                disabled={!totalSeconds}
+              >
+                START
+              </button>
+            </div>
+            <div className="total-line">
+              Total <span className="total-line__value">{formatMMSS(totalSeconds)}</span>
+            </div>
+          </div>
         </div>
 
-        <div className="complex-shell__footer">
-          <div className="form-stack">
-            <button
-              type="button"
-              className="form-stack__action"
-              onClick={start}
-              disabled={!totalSeconds}
-            >
-              START
-            </button>
-          </div>
-          <div className="total-line">
-            Total <span className="total-line__value">{formatMMSS(totalSeconds)}</span>
-          </div>
-        </div>
-      </div>
+        {/* Drawer + handle MUST live outside .complex-shell — that element is
+            position:fixed which creates its own stacking context (modern CSS spec),
+            so any z-index inside it gets clipped to .complex-shell's effective z
+            (auto/0), losing to the CustomHeader at z-60. Rendered as a sibling
+            here they participate in the root stacking context and z-150 wins. */}
+        {drawerAvailable && !drawerOpen && (
+          <button
+            type="button"
+            className="timeline-handle"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="open workout outline"
+          >
+            <span>OUTLINE</span>
+          </button>
+        )}
+
+        {drawerAvailable && (
+          <aside
+            className={`timeline-drawer${drawerOpen ? ' is-open' : ''}`}
+            aria-hidden={!drawerOpen}
+          >
+            <div className="timeline-drawer__head">
+              <span className="timeline-drawer__title">OUTLINE</span>
+              <button
+                type="button"
+                className="timeline-drawer__close"
+                onClick={() => setDrawerOpen(false)}
+                aria-label="close outline"
+              >
+                ✕
+              </button>
+            </div>
+            <ComplexTimeline timeline={timeline} onSegmentClick={scrollToLoop} />
+            <div className="timeline-drawer__stats">
+              <span>
+                LOOPS <strong>{loops.length}</strong>
+              </span>
+              <span>
+                STEPS <strong>{timeline.length}</strong>
+              </span>
+              <span>
+                TOTAL <strong>{formatMMSS(totalSeconds)}</strong>
+              </span>
+            </div>
+          </aside>
+        )}
+      </>
     );
   }
 

@@ -6,6 +6,7 @@ import { SetupShell } from '../components/SetupShell';
 import { TimerScreen } from '../components/TimerScreen';
 import { FieldRow } from '../components/FieldRow';
 import { useTimerFontSize } from '../hooks/useTimerFontSize';
+import { useMonotonicElapsed } from '../hooks/useMonotonicElapsed';
 import { useWakeLock } from '../hooks/useWakeLock';
 import { COUNTDOWN_TIME, formatMMSS, formatTimeFromNow, playSafe } from '../lib/timer-utils';
 
@@ -21,16 +22,13 @@ const Emom: React.FC = () => {
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
   const [ended, setEnded] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
   const beepFiredRef = useRef<Set<string>>(new Set());
 
-  useWakeLock(running && !paused && !ended);
+  const { elapsed, reset: resetElapsed } = useMonotonicElapsed(
+    running && !paused && !ended
+  );
 
-  useEffect(() => {
-    if (!running || paused || ended) return;
-    const id = setInterval(() => setElapsed((s) => s + 1), 1000);
-    return () => clearInterval(id);
-  }, [running, paused, ended]);
+  useWakeLock(running && !paused && !ended);
 
   const cycle = workTotal + rest;
   const totalSeconds = cycle * rounds - (rest > 0 ? rest : 0); // last round doesn't need rest after
@@ -111,7 +109,7 @@ const Emom: React.FC = () => {
     setRunning(false);
     setPaused(false);
     setEnded(false);
-    setElapsed(0);
+    resetElapsed();
     beepFiredRef.current.clear();
   };
 
@@ -119,6 +117,7 @@ const Emom: React.FC = () => {
     if (!workTotal || !rounds) return;
     unlockAudio();
     beepFiredRef.current.clear();
+    resetElapsed();
     setRunning(true);
   };
 

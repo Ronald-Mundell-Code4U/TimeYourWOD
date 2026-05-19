@@ -2,7 +2,7 @@ import React from 'react';
 
 export const KoFiPopUp: React.FC = () => (
   <a
-    href="https://ko-fi.com"
+    href="https://ko-fi.com/timeyourwod"
     target="_blank"
     rel="noopener noreferrer"
     style={{

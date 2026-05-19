@@ -1,6 +1,6 @@
 import React from 'react';
 
-const KOFI_URL = 'https://ko-fi.com/code4u';
+const KOFI_URL = 'https://ko-fi.com/timeyourwod';
 
 const About: React.FC = () => {
   return (

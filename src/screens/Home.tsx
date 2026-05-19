@@ -2,8 +2,24 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/Button';
 import UpdatePopUp from '../components/UpdatePopUp';
+import { useViewport } from '../hooks/useViewport';
+
+const MODES = [
+  { text: 'CLOCK', link: '/clock' },
+  { text: 'TABATA', link: '/tabata' },
+  { text: 'FOR TIME', link: '/for-time' },
+  { text: 'EMOM', link: '/emom' },
+  { text: 'AMRAP', link: '/amrap' },
+  { text: 'COMPLEX', link: '/complex' },
+] as const;
 
 const Home: React.FC = () => {
+  const { orientation, height } = useViewport();
+  // when we'd otherwise overflow vertically — short landscape viewports — switch
+  // to a 2-column wrap so all six buttons fit without scrolling. ~700px is the
+  // threshold below which six stacked 56px buttons + title + footer overflow.
+  const grid = orientation === 'landscape' && height < 700;
+
   return (
     <div
       style={{
@@ -32,14 +48,16 @@ const Home: React.FC = () => {
           width: '100%',
           maxWidth: 720,
           textAlign: 'center',
-          margin: '2rem 0 3rem',
+          margin: grid ? '1rem 0 1.5rem' : '2rem 0 3rem',
         }}
       >
         <h1
           style={{
             margin: 0,
             fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(2.4rem, 11vw, 5.5rem)',
+            fontSize: grid
+              ? 'clamp(1.8rem, 6vh, 3rem)'
+              : 'clamp(2.4rem, 11vw, 5.5rem)',
             letterSpacing: '-0.035em',
             lineHeight: 0.95,
             fontWeight: 800,
@@ -53,23 +71,21 @@ const Home: React.FC = () => {
         aria-label="timer modes"
         style={{
           width: '100%',
-          maxWidth: 420,
-          display: 'flex',
-          flexDirection: 'column',
+          maxWidth: grid ? 720 : 420,
+          display: 'grid',
+          gridTemplateColumns: grid ? 'repeat(2, minmax(0, 1fr))' : '1fr',
           gap: '0.75rem',
+          justifyItems: 'center',
         }}
       >
-        <Button text="CLOCK" link="/clock" />
-        <Button text="TABATA" link="/tabata" />
-        <Button text="FOR TIME" link="/for-time" />
-        <Button text="EMOM" link="/emom" />
-        <Button text="AMRAP" link="/amrap" />
-        <Button text="COMPLEX" link="/complex" />
+        {MODES.map((m) => (
+          <Button key={m.link} text={m.text} link={m.link} />
+        ))}
       </nav>
 
       <div
         style={{
-          marginTop: '2.5rem',
+          marginTop: grid ? '1.25rem' : '2.5rem',
           display: 'flex',
           gap: '1.5rem',
           fontSize: '0.72rem',

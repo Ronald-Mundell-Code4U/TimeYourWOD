@@ -36,7 +36,7 @@ export const TimerDisplay: React.FC<Props> = ({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: Math.max(8, fontSize * 0.05),
+        gap: Math.max(2, fontSize * 0.015),
         userSelect: 'none',
       }}
     >
@@ -79,7 +79,6 @@ export const TimerDisplay: React.FC<Props> = ({
             fontWeight: 700,
             color: phase === 'REST' ? 'var(--fg-dim)' : 'var(--fg)',
             textTransform: 'uppercase',
-            paddingBottom: 4,
             visibility: showPhase ? 'visible' : 'hidden',
           }}
         >

@@ -1,6 +1,10 @@
+// Ported verbatim from web src/lib/timer-utils.ts (minus the web-only playSafe).
+// Pure functions — safe to share between web and native if/when extracted to a workspace pkg.
+
 export const COUNTDOWN_TIME = 10;
 
-export const pad = (n: number): string => String(Math.max(0, Math.floor(n))).padStart(2, '0');
+export const pad = (n: number): string =>
+  String(Math.max(0, Math.floor(n))).padStart(2, '0');
 
 export const formatMMSS = (totalSeconds: number): string => {
   const s = Math.max(0, Math.floor(totalSeconds));
@@ -25,10 +29,12 @@ export const formatTimeFromNow = (offsetSeconds: number): string => {
   return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 };
 
-export const playSafe = (el: HTMLAudioElement) => {
-  try {
-    el.currentTime = 0;
-    const p = el.play();
-    if (p && typeof p.catch === 'function') p.catch(() => {});
-  } catch {}
+/** Map seconds-remaining to which beep should fire at the boundary. */
+export type BeepKind = 'b1' | 'b2' | 'b3' | 'final' | null;
+export const beepFor = (remaining: number): BeepKind => {
+  if (remaining === 3) return 'b1';
+  if (remaining === 2) return 'b2';
+  if (remaining === 1) return 'b3';
+  if (remaining === 0) return 'final';
+  return null;
 };
