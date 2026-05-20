@@ -70,7 +70,7 @@ const Emom: React.FC = () => {
     if (remaining === 3) beep = 'b1';
     else if (remaining === 2) beep = 'b2';
     else if (remaining === 1) beep = 'b3';
-    else if (inCycle === 0 && t > 0) beep = 'final'; // start of each round
+    else if (inCycle === 0) beep = 'final'; // GO at start of each round (incl. workout start)
     return {
       display: formatMMSS(remaining),
       round,

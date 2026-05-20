@@ -23,10 +23,12 @@ export const BEEP_PACKS: BeepPack[] = [
     id: 1,
     name: 'SIMPLE',
     files: [
-      '/Audio/second/Beep1.mp3',
-      '/Audio/second/Beep2.mp3',
-      '/Audio/second/Beep3.mp3',
-      '/Audio/second/FinalBeep.mp3',
+      // Re-encoded as PCM WAV with leading silence trimmed (source MP3s had
+      // ~190ms of silence baked into the head).
+      '/Audio/second/Beep1.wav',
+      '/Audio/second/Beep2.wav',
+      '/Audio/second/Beep3.wav',
+      '/Audio/second/FinalBeep.wav',
     ],
   },
 ];

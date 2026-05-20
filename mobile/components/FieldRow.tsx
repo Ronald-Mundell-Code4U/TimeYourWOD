@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -14,6 +14,7 @@ interface Props {
   suffix: string;
   value: number;
   onChange: (v: number) => void;
+  /** advisory only — START button is what actually blocks invalid configs */
   min?: number;
   max?: number;
 }
@@ -39,12 +40,30 @@ export const FieldRow: React.FC<Props> = ({
   const fontPx = 26;
   const gap = narrow ? 10 : 14;
 
+  // Track raw text separately so the user can clear the field (going to "")
+  // without it snapping back to a number. The parsed numeric value (0 when
+  // empty) propagates to the parent, which uses it to disable the START button.
+  const [raw, setRaw] = useState(String(value));
+  const editing = useRef(false);
+  useEffect(() => {
+    if (!editing.current && value !== Number(raw)) setRaw(String(value));
+    // intentionally not tracking `raw` — only sync when parent pushes a change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
   const handle = (text: string) => {
     const cleaned = text.replace(/[^0-9]/g, '');
-    let n = cleaned === '' ? min : Number(cleaned);
-    if (Number.isNaN(n)) n = min;
-    if (n < min) n = min;
-    if (max !== undefined && n > max) n = max;
+    setRaw(cleaned);
+    if (cleaned === '') {
+      onChange(0);
+      return;
+    }
+    let n = Number(cleaned);
+    if (Number.isNaN(n)) n = 0;
+    if (max !== undefined && n > max) {
+      n = max;
+      setRaw(String(n));
+    }
     onChange(n);
   };
 
@@ -73,8 +92,10 @@ export const FieldRow: React.FC<Props> = ({
           },
         ]}
         keyboardType="number-pad"
-        value={String(value)}
+        value={raw}
         onChangeText={handle}
+        onFocus={() => { editing.current = true; }}
+        onBlur={() => { editing.current = false; }}
         selectTextOnFocus
         maxLength={5}
         accessibilityLabel={`${prefix} ${suffix}`.trim()}

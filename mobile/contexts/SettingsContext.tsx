@@ -26,10 +26,12 @@ export const BEEP_PACKS: BeepPack[] = [
     id: 1,
     name: 'SIMPLE',
     files: [
-      require('../assets/audio/second/Beep1.mp3'),
-      require('../assets/audio/second/Beep2.mp3'),
-      require('../assets/audio/second/Beep3.mp3'),
-      require('../assets/audio/second/FinalBeep.mp3'),
+      // Re-encoded as PCM WAV with leading silence trimmed (source MP3s had
+      // ~190ms of silence at the head, which made beeps audibly land late).
+      require('../assets/audio/second/Beep1.wav'),
+      require('../assets/audio/second/Beep2.wav'),
+      require('../assets/audio/second/Beep3.wav'),
+      require('../assets/audio/second/FinalBeep.wav'),
     ],
   },
 ];

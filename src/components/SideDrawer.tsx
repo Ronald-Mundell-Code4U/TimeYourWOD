@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useSettings, BEEP_PACKS } from '../contexts/SettingContext';
 import { Toggle } from './Toggle';
 import { CustomTimePicker } from './CustomTimePicker';
+import { Select } from './Select';
 import { playSafe } from '../lib/timer-utils';
 
 interface Props {
@@ -164,43 +165,29 @@ export const SideDrawer: React.FC<Props> = ({ trigger }) => {
             <section className="card" style={{ marginBottom: '1rem' }}>
               <h2 style={blockTitle}>BEEP PACK</h2>
               <p style={blockText}>Select the sound used at 3-2-1-GO.</p>
-              <select
-                value={settings.selectBeep}
-                onChange={(e) => updateSettings({ selectBeep: Number(e.target.value) })}
-                style={{
-                  width: '100%',
-                  maxWidth: 260,
-                  padding: '0.6rem 0.75rem',
-                  background: 'var(--bg-elev)',
-                  border: '2px solid var(--line)',
-                  color: 'var(--fg)',
-                  fontFamily: 'inherit',
-                  fontWeight: 600,
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                  borderRadius: 2,
-                  fontSize: '0.85rem',
-                  minHeight: 44,
-                  textAlign: 'center',
-                  textAlignLast: 'center',
-                }}
-              >
-                {BEEP_PACKS.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                className="btn-cmd"
-                onClick={playPreview}
-                disabled={previewing}
-                style={previewing ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
-                aria-label="preview 3-2-1-GO"
-              >
-                {previewing ? 'PLAYING…' : 'PREVIEW 3 · 2 · 1 · GO'}
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', width: '100%', maxWidth: 340 }}>
+                <Select
+                  title="Beep pack"
+                  ariaLabel="beep pack"
+                  value={settings.selectBeep}
+                  options={BEEP_PACKS.map((p) => ({ label: p.name, value: p.id }))}
+                  onChange={(id) => updateSettings({ selectBeep: Number(id) })}
+                />
+                <button
+                  type="button"
+                  className="btn-cmd"
+                  onClick={playPreview}
+                  disabled={previewing}
+                  style={{
+                    width: '100%',
+                    whiteSpace: 'nowrap',
+                    ...(previewing ? { opacity: 0.4, cursor: 'not-allowed' } : null),
+                  }}
+                  aria-label="preview 3-2-1-GO"
+                >
+                  {previewing ? 'PLAYING…' : 'PREVIEW 3 · 2 · 1 · GO'}
+                </button>
+              </div>
             </section>
 
             <div

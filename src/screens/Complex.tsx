@@ -274,7 +274,7 @@ const Complex: React.FC = () => {
         if (remaining === 3) beep = 'b1';
         else if (remaining === 2) beep = 'b2';
         else if (remaining === 1) beep = 'b3';
-        else if (within === 0 && t > 0) beep = 'final';
+        else if (within === 0) beep = 'final';
         return {
           display: formatMMSS(remaining),
           loop: seg.loop,
