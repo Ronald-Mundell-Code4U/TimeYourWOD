@@ -7,4 +7,15 @@ export default defineConfig({
     host: true,
     port: 3000,
   },
+  build: {
+    target: 'chrome76',
+  },
+  esbuild: {
+    target: 'chrome76',
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'chrome76',
+    },
+  },
 });

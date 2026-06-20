@@ -31,6 +31,73 @@
     <title>TimeYourWOD</title>
   </head>
   <body>
+    <script>
+      // Chrome <84 doesn't support `gap` inside flex containers. Detect once
+      // and add `.no-flex-gap` to <html>, then run a runtime polyfill that
+      // simulates `gap` via sibling margins for any element that uses inline
+      // `style={{ display: 'flex', gap: ... }}`. Class-based flex containers
+      // are handled separately by fallback rules in src/index.css.
+      (function () {
+        var supported;
+        try {
+          var probe = document.createElement('div');
+          probe.style.cssText = 'display:flex;flex-direction:column;row-gap:1px;position:absolute;visibility:hidden;width:0;height:0';
+          probe.appendChild(document.createElement('div'));
+          probe.appendChild(document.createElement('div'));
+          document.documentElement.appendChild(probe);
+          supported = probe.scrollHeight === 1;
+          document.documentElement.removeChild(probe);
+        } catch (e) {
+          supported = false;
+        }
+        if (supported) return;
+        document.documentElement.classList.add('no-flex-gap');
+
+        var KEY = '__flexGapKey';
+        function applyTo(el) {
+          if (!el.style) return;
+          if (!el.style.gap && !el.style.rowGap && !el.style.columnGap) return;
+          var cs = getComputedStyle(el);
+          if (cs.display.indexOf('flex') === -1) return;
+          var rowGap = parseFloat(cs.rowGap) || 0;
+          var colGap = parseFloat(cs.columnGap) || 0;
+          if (!rowGap && !colGap) return;
+          var isCol = cs.flexDirection.indexOf('column') === 0;
+          var amt = isCol ? rowGap : colGap;
+          var dir = isCol ? 'marginTop' : 'marginLeft';
+          var key = dir + ':' + amt;
+          var kids = el.children;
+          for (var i = 0; i < kids.length; i++) {
+            var k = kids[i];
+            if (k[KEY] === key && (i > 0) === !!k.style[dir]) continue;
+            k.style[dir] = i === 0 ? '' : amt + 'px';
+            k[KEY] = key;
+          }
+        }
+        function scan() {
+          var els = document.body && document.body.querySelectorAll('[style*="gap"]');
+          if (!els) return;
+          for (var i = 0; i < els.length; i++) applyTo(els[i]);
+        }
+        var pending = false;
+        function schedule() {
+          if (pending) return;
+          pending = true;
+          requestAnimationFrame(function () { pending = false; scan(); });
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', schedule);
+        } else {
+          schedule();
+        }
+        new MutationObserver(schedule).observe(document.documentElement, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['style']
+        });
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
 

@@ -924,3 +924,29 @@ input, select { font-family: inherit; }
   .btn { font-size: 0.92rem; padding: 0.95rem 1.1rem; }
   .num-input { width: 72px; font-size: 1.15rem; }
 }
+
+/* ─── Chrome <84 fallback: flexbox `gap` polyfill via sibling margins.
+   Activated by the inline detector in index.html that adds `.no-flex-gap`
+   to <html> when the browser doesn't honor `gap:` inside flex containers.
+   Grid `gap:` works in Chrome 57+, so grid containers are untouched. */
+.no-flex-gap .btn-cmd > * + * { margin-left: 0.6rem; }
+.no-flex-gap .card > * + * { margin-top: 0.85rem; }
+.no-flex-gap .field > * + * { margin-top: 0.65rem; }
+.no-flex-gap .workout-builder > * + * { margin-top: 1rem; }
+.no-flex-gap .loop-card > * + * { margin-top: 1rem; }
+.no-flex-gap .loop-card__header > * + * { margin-left: 0.75rem; }
+.no-flex-gap .loop-card__controls > * + * { margin-left: 0.4rem; }
+.no-flex-gap .intervals > * + * { margin-top: 0.6rem; }
+.no-flex-gap .interval-row__field > * + * { margin-top: 0.3rem; }
+.no-flex-gap .interval-row__controls > * + * { margin-left: 0.3rem; }
+.no-flex-gap .complex-shell__body > * + * { margin-top: 1rem; }
+.no-flex-gap .complex-shell__footer > * + * { margin-top: 0.5rem; }
+.no-flex-gap .install-modal__actions > * + * { margin-top: 0.5rem; }
+.no-flex-gap .timeline-drawer__stats > * + * { margin-left: 0.5rem; }
+.no-flex-gap .complex-timeline__list > * + * { margin-top: 0.15rem; }
+.no-flex-gap .modal > * + * { margin-top: 1rem; }
+.no-flex-gap .modal__form > * + * { margin-top: 1rem; }
+.no-flex-gap .modal__actions > * + * { margin-left: 0.5rem; }
+.no-flex-gap .templates > * + * { margin-left: 0.5rem; }
+.no-flex-gap .total-line > * + * { margin-left: 0.6rem; }
+.no-flex-gap .rotate-hint > * + * { margin-left: 0.7rem; }

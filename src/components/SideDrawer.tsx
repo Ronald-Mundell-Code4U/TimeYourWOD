@@ -201,7 +201,7 @@ export const SideDrawer: React.FC<Props> = ({ trigger }) => {
                 textAlign: 'center',
               }}
             >
-              v0.1 — STARTER BUILD
+              v2.0 — NEW RELEASE
             </div>
           </aside>
         </>

@@ -34,12 +34,12 @@ const Home: React.FC = () => {
       }}
     >
       <UpdatePopUp
-        storageKey="updatePopupExited_v1"
-        title="STARTER BUILD"
+        storageKey="updatePopupExited_v2"
+        title="v2.0 — NEW RELEASE"
         body={
-          'Six timer modes are wired and ready.\n' +
-          'Tap the cog (top-right) to set heats, overtime, theme, and beeps.\n' +
-          'Tap the timer during a workout to pause — top-left hot-corner resets.'
+          'TimeYourWOD has been rebuilt from the ground up.\n' +
+          'New: a stopwatch lives alongside the wall clock under CLOCK.\n' +
+          'Android and iOS updates are coming soon — stay tuned.'
         }
       />
 
