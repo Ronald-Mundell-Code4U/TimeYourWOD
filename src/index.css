@@ -413,7 +413,10 @@ input, select { font-family: inherit; }
 /* ─── complex shell — sticky title, scrolling body, sticky footer ─── */
 .complex-shell {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   padding-top: calc(48px + var(--safe-t));
   padding-left: var(--safe-l);
   padding-right: var(--safe-r);
@@ -703,7 +706,10 @@ input, select { font-family: inherit; }
 /* ─── modal ─────────────────────────────────────── */
 .modal-backdrop {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: var(--overlay);
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
@@ -861,7 +867,11 @@ input, select { font-family: inherit; }
 
 /* drawer */
 .drawer-backdrop {
-  position: fixed; inset: 0;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: rgba(0,0,0,0.55);
   z-index: 200;
   animation: fade 160ms ease;

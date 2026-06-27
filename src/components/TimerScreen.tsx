@@ -44,7 +44,10 @@ export const TimerScreen: React.FC<Props> = ({
     <div
       style={{
         position: 'fixed',
-        inset: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
         paddingTop: 'calc(48px + var(--safe-t))',
         paddingBottom: 'var(--safe-b)',
         paddingLeft: 'var(--safe-l)',
@@ -122,7 +125,10 @@ export const TimerScreen: React.FC<Props> = ({
             aria-hidden
             style={{
               position: 'absolute',
-              inset: 0,
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
               background: 'var(--overlay)',
               backdropFilter: 'blur(4px)',
               WebkitBackdropFilter: 'blur(4px)',
