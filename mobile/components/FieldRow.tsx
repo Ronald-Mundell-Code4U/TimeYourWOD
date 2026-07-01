@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -8,6 +7,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useTheme } from '../theme/useTheme';
+import { monoFont } from '../theme';
 
 interface Props {
   prefix: string;
@@ -18,8 +18,6 @@ interface Props {
   min?: number;
   max?: number;
 }
-
-const monoFont = Platform.select({ ios: 'Menlo', android: 'monospace' });
 
 export const FieldRow: React.FC<Props> = ({
   prefix,

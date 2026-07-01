@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View, Platform } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../theme/useTheme';
+import { monoFont } from '../theme';
 
 interface Props {
   time: string;
@@ -85,8 +86,6 @@ export const TimerDisplay: React.FC<Props> = ({
     </View>
   );
 };
-
-const monoFont = Platform.select({ ios: 'Menlo', android: 'monospace' });
 
 const styles = StyleSheet.create({
   col: {

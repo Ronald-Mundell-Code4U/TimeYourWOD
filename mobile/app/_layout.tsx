@@ -1,11 +1,17 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as SplashScreen from 'expo-splash-screen';
+import { useFonts, JetBrainsMono_700Bold } from '@expo-google-fonts/jetbrains-mono';
 import { SettingsProvider } from '../contexts/SettingsContext';
 import { SavedTimersProvider } from '../contexts/SavedTimersContext';
 import { useTheme } from '../theme/useTheme';
+
+// Hold the splash until the scoreboard font is ready, so screens never flash in
+// system mono before JetBrains Mono loads.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const InnerLayout: React.FC = () => {
   const { colors, name } = useTheme();
@@ -40,16 +46,28 @@ const InnerLayout: React.FC = () => {
 };
 
 // Settings must wrap useTheme (useTheme reads from SettingsContext).
-const RootLayout: React.FC = () => (
-  <GestureHandlerRootView style={{ flex: 1 }}>
-    <SafeAreaProvider>
-      <SettingsProvider>
-        <SavedTimersProvider>
-          <InnerLayout />
-        </SavedTimersProvider>
-      </SettingsProvider>
-    </SafeAreaProvider>
-  </GestureHandlerRootView>
-);
+const RootLayout: React.FC = () => {
+  const [fontsLoaded, fontError] = useFonts({ JetBrainsMono_700Bold });
+
+  const onLayout = useCallback(() => {
+    // hide the splash once the first frame with the font is committed
+    if (fontsLoaded || fontError) SplashScreen.hideAsync().catch(() => {});
+  }, [fontsLoaded, fontError]);
+
+  // keep the splash up until the font resolves (loaded or errored → degrade to system mono)
+  if (!fontsLoaded && !fontError) return null;
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayout}>
+      <SafeAreaProvider>
+        <SettingsProvider>
+          <SavedTimersProvider>
+            <InnerLayout />
+          </SavedTimersProvider>
+        </SettingsProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
+  );
+};
 
 export default RootLayout;

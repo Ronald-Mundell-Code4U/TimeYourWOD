@@ -50,25 +50,40 @@ Then either:
 - **Physical device**: install the Expo Go app, scan the QR code from the dev server.
 
 `npm run typecheck` runs `tsc --noEmit` against the strict TS config.
+`npm test` runs the Jest suite (see **Tests** below).
 
 ## What works today
 
+All six modes are fully implemented (setup + running view), not stubs:
+
 - Bottom tab nav: **Timers / Saved / About**.
 - Home screen with the six mode buttons.
-- **Tabata** end-to-end — FOR / WORK / REST setup, header SAVE button → unified `saved-timers-v1` store, START → countdown → workout → end. Pause overlay, screen wake-lock, heats, beep cadence.
-- **Clock** — wall clock ticking.
-- **Saved Timers** list — search, recent-first, tap to load into a mode, long-press to delete.
+- **Clock** — wall clock + stopwatch.
+- **Tabata / For Time / AMRAP / EMOM** — full setup, header SAVE → unified `saved-timers-v1` store, START → 10s countdown → workout → end. Pause overlay, hot-corner reset, screen wake-lock, heats, 3-2-1-GO beep cadence + matched haptics.
+- **Complex** — loop/interval builder + runtime (`shared/complex-timeline.ts`), save/load.
+- **Saved Timers** list — search, recent-first, tap to load into the matching mode, long-press to delete.
+- **Settings** screen — theme toggle, heats + delay picker, For Time overtime, beep pack selector + 3-2-1-GO preview.
 - **About** with Ko-fi + web links.
-- Dark/light theme tokens hooked up; theme switch UI lives in the Settings drawer (next step).
+- Dark/light theme tokens throughout.
+
+## Tests
+
+`npm test` (jest-expo + @testing-library/react-native). 59 tests across 7 suites:
+
+- `shared/__tests__/` — `timer-utils`, `complex-timeline`, `useTimerEngine` (monotonic clock + beep dedup), and `types` (compile-time discriminated-union assertions).
+- `contexts/__tests__/SavedTimersContext` — save / overwrite / rename / duplicate / remove / markRun + AsyncStorage persistence.
+- `app/__tests__/screens` — smoke render of all 10 screens.
+- `app/__tests__/saved-timers-flow` — end-to-end Saved Timers: save → overwrite-collision → list → load-into-mode (incl. `fortime`→`/for-time`) → prefill → markRun-on-START.
+
+Native modules (AsyncStorage, expo-av, expo-haptics, expo-keep-awake, expo-router, vector-icons) are mocked in `jest.setup.ts`.
 
 ## What's left (in priority order)
 
-1. **Settings drawer / screen** — theme toggle, heats config (with the same MM:SS picker shape as the web), overtime, beep pack selector + 3-2-1-GO preview. Should be reachable from a cog in the header of every screen.
-2. **For Time / AMRAP / EMOM** — port from web, follow `tabata.tsx` as the reference. Each is ~150 lines.
-3. **Complex builder** — port the loop / interval data model + builder UI. The runtime is already in `shared/complex-timeline.ts`.
-4. **App icon + splash assets** — currently the `assets/` folder needs `icon.png`, `adaptive-icon.png`, `splash.png`, `favicon.png`. The web's `android-chrome-512x512.png` is a good starting point.
-5. **Haptics** — `expo-haptics` light tap on every 3-2-1 beep, heavier hit on GO and end-of-workout.
-6. **EAS Build + Submit** — `npm i -g eas-cli && eas init`, then `eas build -p ios|android --profile preview` for internal testing, and `eas submit` for store delivery.
+1. **App icon + splash assets** — the `assets/` folder needs `icon.png`, `adaptive-icon.png`, `splash.png`, `favicon.png`. The web's `android-chrome-512x512.png` is a good starting point.
+2. **Bundle JetBrains Mono** — `theme/index.ts` references `JetBrainsMono_700Bold` but the font isn't loaded (falls back to system mono); add `@expo-google-fonts/jetbrains-mono` + `useFonts` for scoreboard parity with the web.
+3. **EAS Build + Submit** — `npm i -g eas-cli && eas init`, then `eas build -p ios|android --profile preview` for internal testing, and `eas submit` for store delivery.
+
+> Tech debt: `expo-av` is deprecated in SDK 52 (superseded by `expo-audio`); migrate when convenient.
 
 ## Conventions
 

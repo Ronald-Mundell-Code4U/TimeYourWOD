@@ -28,8 +28,12 @@ export const palette = {
 export type ThemeName = keyof typeof palette;
 export type Colors = (typeof palette)[ThemeName];
 
+// JetBrains Mono is bundled + loaded in app/_layout.tsx (useFonts, splash held
+// until ready), matching the web scoreboard. Components use `monoFont` directly.
+export const monoFont = 'JetBrainsMono_700Bold';
+
 export const fonts = {
-  mono: 'JetBrainsMono_700Bold', // wired once expo-google-fonts is added; falls back to system mono
+  mono: monoFont,
   monoFallback: 'Menlo',
   display: 'System',
 } as const;

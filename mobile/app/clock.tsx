@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeepAwake } from 'expo-keep-awake';
 import { TimerDisplay } from '../components/TimerDisplay';
 import { CmdButton } from '../components/CmdButton';
 import { heatFontSize } from '../components/TimerScreen';
@@ -21,6 +22,11 @@ const Clock: React.FC = () => {
   const [paused, setPaused] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
   const startRef = useRef(0);
+
+  // Hold the screen awake while the stopwatch is actively counting (matches the
+  // workout modes). Wall-clock mode does NOT keep-awake — it'd drain the battery
+  // indefinitely; if you want a persistent gym clock, use fullscreen instead.
+  useKeepAwake(mode === 'stopwatch' && running && !paused ? 'clock-stopwatch' : undefined);
 
   // wall clock tick
   useEffect(() => {

@@ -1,7 +1,8 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View, Platform } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/useTheme';
+import { monoFont } from '../theme';
 import { FieldRow } from './FieldRow';
 import type { Interval, Loop } from '../shared/types';
 
@@ -180,7 +181,6 @@ const IconBtn: React.FC<{
   </Pressable>
 );
 
-const monoFont = Platform.select({ ios: 'Menlo', android: 'monospace' });
 
 const styles = StyleSheet.create({
   card: {

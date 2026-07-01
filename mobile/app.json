@@ -8,6 +8,7 @@
     "newArchEnabled": true,
     "scheme": "timeyourwod",
     "backgroundColor": "#0a0a0a",
+    "icon": "./assets/icon.png",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.code4u.timeyourwod",
@@ -21,10 +22,15 @@
     },
     "android": {
       "package": "app.code4u.timeyourwod",
-      "versionCode": 1
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0a0a"
+      }
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
@@ -34,7 +40,16 @@
           "microphonePermission": false
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "backgroundColor": "#0a0a0a",
+          "resizeMode": "contain",
+          "imageWidth": 220
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

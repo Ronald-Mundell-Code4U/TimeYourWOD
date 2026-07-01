@@ -1,6 +1,7 @@
 import React from 'react';
-import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { useTheme } from '../theme/useTheme';
+import { monoFont } from '../theme';
 
 interface Props {
   /** total value in seconds */
@@ -11,8 +12,6 @@ interface Props {
 
 const clamp = (n: number, lo: number, hi: number) =>
   Math.max(lo, Math.min(hi, Number.isFinite(n) ? n : lo));
-
-const monoFont = Platform.select({ ios: 'Menlo', android: 'monospace' });
 
 export const TimePicker: React.FC<Props> = ({ value, onChange, showHours = false }) => {
   const { colors } = useTheme();
