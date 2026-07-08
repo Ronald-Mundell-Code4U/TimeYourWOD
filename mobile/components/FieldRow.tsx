@@ -39,13 +39,14 @@ export const FieldRow: React.FC<Props> = ({
 
   // Responsive labels, fixed-size input cell so it lines up with the START button.
   const narrow = width < 380;
-  // Compact fits within a LoopCard even on the narrowest phones
-  // (label*2 + input + gap*2 ≈ 236 < card inner width).
-  const labelW = compact ? 60 : narrow ? 72 : 100;
-  const inputW = compact ? 104 : 200; // full width matches CmdButton large maxWidth
-  const inputH = compact ? 48 : 64;
-  const fontPx = compact ? 20 : 26;
-  const gap = compact ? 8 : narrow ? 10 : 14;
+  // Compact fits within a LoopCard even on the narrowest phones. The seconds
+  // input only holds a few digits, so give the label columns more room (keeps
+  // "THEN REST" readable) and shrink the input: 80 + 80 + 80 + 2*6 = 252 < ~268.
+  const labelW = compact ? 80 : narrow ? 72 : 100;
+  const inputW = compact ? 80 : 200; // full width matches CmdButton large maxWidth
+  const inputH = compact ? 46 : 64;
+  const fontPx = compact ? 19 : 26;
+  const gap = compact ? 6 : narrow ? 10 : 14;
 
   // Track raw text separately so the user can clear the field (going to "")
   // without it snapping back to a number. The parsed numeric value (0 when

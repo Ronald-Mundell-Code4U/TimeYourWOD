@@ -24,7 +24,10 @@ const InnerLayout: React.FC = () => {
           headerTintColor: colors.fg,
           headerTitleStyle: { fontWeight: '700' },
           contentStyle: { backgroundColor: colors.bg },
-          animation: 'fade_from_bottom',
+          // Native push (not fade_from_bottom): the fade cross-faded the header
+          // and made the iOS 26 glass "Back" pill flash dark→light mid-transition.
+          // The native slide lets iOS morph the back button cleanly.
+          animation: 'default',
           headerBackTitle: 'Back',
           headerBackButtonDisplayMode: 'minimal',
         }}
