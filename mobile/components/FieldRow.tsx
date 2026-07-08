@@ -17,6 +17,12 @@ interface Props {
   /** advisory only — START button is what actually blocks invalid configs */
   min?: number;
   max?: number;
+  /**
+   * Narrower layout for use inside constrained containers (e.g. LoopCard in the
+   * Complex builder). The default full-width sizing overflows a card, spilling
+   * long labels ("THEN REST" / "SECONDS") off the screen edges.
+   */
+  compact?: boolean;
 }
 
 export const FieldRow: React.FC<Props> = ({
@@ -26,17 +32,20 @@ export const FieldRow: React.FC<Props> = ({
   onChange,
   min = 0,
   max,
+  compact = false,
 }) => {
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
 
   // Responsive labels, fixed-size input cell so it lines up with the START button.
   const narrow = width < 380;
-  const labelW = narrow ? 72 : 100;
-  const inputW = 200; // matches CmdButton large maxWidth
-  const inputH = 64;  // matches CmdButton large height
-  const fontPx = 26;
-  const gap = narrow ? 10 : 14;
+  // Compact fits within a LoopCard even on the narrowest phones
+  // (label*2 + input + gap*2 ≈ 236 < card inner width).
+  const labelW = compact ? 60 : narrow ? 72 : 100;
+  const inputW = compact ? 104 : 200; // full width matches CmdButton large maxWidth
+  const inputH = compact ? 48 : 64;
+  const fontPx = compact ? 20 : 26;
+  const gap = compact ? 8 : narrow ? 10 : 14;
 
   // Track raw text separately so the user can clear the field (going to "")
   // without it snapping back to a number. The parsed numeric value (0 when

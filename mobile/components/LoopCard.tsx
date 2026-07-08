@@ -61,6 +61,7 @@ export const LoopCard: React.FC<Props> = ({
           value={loop.rounds}
           onChange={(v) => onUpdate({ rounds: v })}
           min={1}
+          compact
         />
       </View>
 
@@ -149,6 +150,7 @@ export const LoopCard: React.FC<Props> = ({
             value={loop.transitionRest}
             onChange={(v) => onUpdate({ transitionRest: v })}
             min={0}
+            compact
           />
         </View>
       )}
