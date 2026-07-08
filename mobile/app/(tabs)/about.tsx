@@ -43,10 +43,6 @@ const About: React.FC = () => {
         <CmdButton text="Support on Ko-fi" onPress={() => Linking.openURL(KOFI_URL)} />
         <CmdButton text="Open the web version" onPress={() => Linking.openURL(WEB_URL)} />
       </View>
-
-      <Text style={[styles.signoff, { color: colors.fg }]}>
-        Warm regards,{'\n'}Ronald Mundell
-      </Text>
     </ScrollView>
   );
 };
@@ -80,7 +76,6 @@ const styles = StyleSheet.create({
   },
   body: { fontSize: 15, lineHeight: 22 },
   actions: { gap: 10, alignItems: 'center', marginTop: 8, marginBottom: 24 },
-  signoff: { fontSize: 14, marginTop: 8 },
 });
 
 export default About;
