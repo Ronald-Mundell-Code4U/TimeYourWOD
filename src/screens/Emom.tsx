@@ -70,7 +70,9 @@ const Emom: React.FC = () => {
     if (remaining === 3) beep = 'b1';
     else if (remaining === 2) beep = 'b2';
     else if (remaining === 1) beep = 'b3';
-    else if (inCycle === 0) beep = 'final'; // GO at start of each round (incl. workout start)
+    // GO at the start of every segment — work AND rest (not just round start),
+    // so the work→rest boundary within a round gets its 3-2-1-GO too.
+    else if (inCycle === 0 || (rest > 0 && inCycle === workTotal)) beep = 'final';
     return {
       display: formatMMSS(remaining),
       round,

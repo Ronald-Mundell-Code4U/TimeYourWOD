@@ -72,7 +72,9 @@ const Tabata: React.FC = () => {
     if (remaining === 3) beep = 'b1';
     else if (remaining === 2) beep = 'b2';
     else if (remaining === 1) beep = 'b3';
-    else if (remaining === work && inWork && inCycle === 0) beep = 'final'; // start of work
+    // GO at the start of every segment — work AND rest (not just work start),
+    // so the work→rest boundary within a round gets its 3-2-1-GO too.
+    else if (inCycle === 0 || (rest > 0 && inCycle === work)) beep = 'final';
     return {
       display: formatMMSS(remaining),
       round,
