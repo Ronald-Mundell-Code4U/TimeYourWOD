@@ -20,7 +20,7 @@ import { SetupShell } from '../components/SetupShell';
 import { useTheme } from '../theme/useTheme';
 import { useSettings } from '../contexts/SettingsContext';
 import { useSavedTimers } from '../contexts/SavedTimersContext';
-import { COUNTDOWN_TIME, beepFor, formatMMSS, formatTimeFromNow } from '../shared/timer-utils';
+import { COUNTDOWN_TIME, beepFor, formatMMSS, formatTimeFromNow, isSegmentStart } from '../shared/timer-utils';
 import { useTimerEngine } from '../shared/useTimerEngine';
 import type { TabataConfig } from '../shared/types';
 
@@ -118,7 +118,8 @@ const Tabata: React.FC = () => {
       const inWork = inCycle < work;
       const remaining = inWork ? work - inCycle : cycle - inCycle;
       let beep = beepFor(remaining);
-      if (!beep && inWork && inCycle === 0) beep = 'final';
+      // GO beep at the start of every segment (work AND rest), matching Complex.
+      if (!beep && isSegmentStart(inCycle, work, rest)) beep = 'final';
       return {
         display: formatMMSS(remaining),
         round,
@@ -127,7 +128,7 @@ const Tabata: React.FC = () => {
         finished: false,
       };
     },
-    [elapsed, cycle, rounds, totalSeconds, work]
+    [elapsed, cycle, rounds, totalSeconds, work, rest]
   );
 
   const heat1 = useMemo(() => computeHeat(0), [computeHeat]);

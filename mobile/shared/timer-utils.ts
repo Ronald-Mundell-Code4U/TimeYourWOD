@@ -38,3 +38,13 @@ export const beepFor = (remaining: number): BeepKind => {
   if (remaining === 0) return 'final';
   return null;
 };
+
+/**
+ * True on the first tick of a work OR rest segment within a Tabata/EMOM cycle
+ * (cycle = [work][rest]). The GO ("final") beep fires here, after the preceding
+ * segment's 3-2-1. Rest starts at inCycle === workLen (only when rest > 0);
+ * work starts at inCycle === 0. Complex handles this per-segment already; this
+ * keeps Tabata/EMOM consistent so every interval boundary gets its GO cue.
+ */
+export const isSegmentStart = (inCycle: number, workLen: number, rest: number): boolean =>
+  inCycle === 0 || (rest > 0 && inCycle === workLen);

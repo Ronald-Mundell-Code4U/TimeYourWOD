@@ -15,6 +15,7 @@
       "buildNumber": "1",
       "infoPlist": {
         "UIBackgroundModes": [
+          "audio",
           "audio"
         ],
         "ITSAppUsesNonExemptEncryption": false
@@ -28,6 +29,7 @@
         "backgroundColor": "#0a0a0a"
       },
       "permissions": [
+        "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
@@ -65,6 +67,12 @@
         "projectId": "aaa98ead-a08e-44aa-96b7-73aea591db53"
       }
     },
-    "owner": "code4u"
+    "owner": "code4u",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/aaa98ead-a08e-44aa-96b7-73aea591db53"
+    }
   }
 }

@@ -6,6 +6,7 @@ import {
   formatStopwatch,
   formatTimeFromNow,
   beepFor,
+  isSegmentStart,
 } from '../timer-utils';
 
 describe('pad', () => {
@@ -86,5 +87,24 @@ describe('beepFor cadence', () => {
 describe('COUNTDOWN_TIME', () => {
   it('is the 10s pre-countdown documented in the design', () => {
     expect(COUNTDOWN_TIME).toBe(10);
+  });
+});
+
+describe('isSegmentStart (GO beep at every work/rest boundary)', () => {
+  // cycle = [work=30][rest=10]
+  it('fires at work start (inCycle 0)', () => {
+    expect(isSegmentStart(0, 30, 10)).toBe(true);
+  });
+  it('fires at rest start (inCycle === workLen) when rest > 0', () => {
+    expect(isSegmentStart(30, 30, 10)).toBe(true);
+  });
+  it('does NOT fire mid-work or mid-rest', () => {
+    expect(isSegmentStart(15, 30, 10)).toBe(false);
+    expect(isSegmentStart(35, 30, 10)).toBe(false);
+  });
+  it('has no rest-start boundary when rest is 0', () => {
+    // regression: EMOM/Tabata with rest=0 only boundary is inCycle 0
+    expect(isSegmentStart(0, 60, 0)).toBe(true);
+    expect(isSegmentStart(60, 60, 0)).toBe(false);
   });
 });

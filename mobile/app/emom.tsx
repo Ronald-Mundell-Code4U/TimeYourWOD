@@ -20,7 +20,7 @@ import { SetupShell } from '../components/SetupShell';
 import { useTheme } from '../theme/useTheme';
 import { useSettings } from '../contexts/SettingsContext';
 import { useSavedTimers } from '../contexts/SavedTimersContext';
-import { COUNTDOWN_TIME, beepFor, formatMMSS, formatTimeFromNow } from '../shared/timer-utils';
+import { COUNTDOWN_TIME, beepFor, formatMMSS, formatTimeFromNow, isSegmentStart } from '../shared/timer-utils';
 import { useTimerEngine } from '../shared/useTimerEngine';
 import type { EmomConfig } from '../shared/types';
 
@@ -118,7 +118,8 @@ const Emom: React.FC = () => {
       const inWork = inCycle < workTotal;
       const remaining = inWork ? workTotal - inCycle : cycle - inCycle;
       let beep: ReturnType<typeof beepFor> = beepFor(remaining);
-      if (!beep && inCycle === 0) beep = 'final';
+      // GO beep at the start of every segment (work AND rest), matching Complex.
+      if (!beep && isSegmentStart(inCycle, workTotal, rest)) beep = 'final';
       return {
         display: formatMMSS(remaining),
         round,
@@ -127,7 +128,7 @@ const Emom: React.FC = () => {
         finished: false,
       };
     },
-    [elapsed, cycle, rounds, workTotal, totalSeconds]
+    [elapsed, cycle, rounds, workTotal, rest, totalSeconds]
   );
 
   const heat1 = useMemo(() => computeHeat(0), [computeHeat]);
