@@ -12,7 +12,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.code4u.timeyourwod",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
         "UIBackgroundModes": [
           "audio",
@@ -29,7 +29,6 @@
         "backgroundColor": "#0a0a0a"
       },
       "permissions": [
-        "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
@@ -54,7 +53,8 @@
           "resizeMode": "contain",
           "imageWidth": 220
         }
-      ]
+      ],
+      "./plugins/withFmtConstevalFix"
     ],
     "experiments": {
       "typedRoutes": true
