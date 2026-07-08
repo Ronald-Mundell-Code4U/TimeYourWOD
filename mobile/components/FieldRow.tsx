@@ -74,6 +74,8 @@ export const FieldRow: React.FC<Props> = ({
           { color: colors.fg, width: labelW },
         ]}
         numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.6}
       >
         {prefix}
       </Text>
@@ -105,6 +107,8 @@ export const FieldRow: React.FC<Props> = ({
           { color: colors.fg, width: labelW },
         ]}
         numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.6}
       >
         {suffix}
       </Text>
