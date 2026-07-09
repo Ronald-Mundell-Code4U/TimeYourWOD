@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import Constants from 'expo-constants';
 
 import { useTheme } from '../theme/useTheme';
 import { useSettings, BEEP_PACKS } from '../contexts/SettingsContext';
@@ -130,7 +131,9 @@ const Settings: React.FC = () => {
           </View>
         </Section>
 
-        <Text style={[styles.version, { color: colors.fgDim }]}>v0.1 · TimeYourWOD</Text>
+        <Text style={[styles.version, { color: colors.fgDim }]}>
+          v{Constants.expoConfig?.version ?? ''} · TimeYourWOD
+        </Text>
       </ScrollView>
     </View>
   );
